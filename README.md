@@ -2,7 +2,8 @@
 
 Take a photo of an item → AI identifies it → the app tells you which bin it goes in → log the weight → track your recycling totals.
 
-The full plan is in [PLAN.md](PLAN.md). Built so far: scan → AI → bin, "Can I recycle…?" search, saving with weight, totals, streaks and a weekly goal, history, a drop-off map of nearby recycling points, groups with a leaderboard, and email sign-in to keep progress. Live at <https://scan2-recycle.vercel.app>.
+**New here (person or AI)? Start with [HANDOFF.md](HANDOFF.md).** The full plan is in [PLAN.md](PLAN.md). Built so far: scan → AI → bin, "Can I recycle…?" search, saving with weight, totals, streaks and a weekly goal, history, a drop-off map where anyone can add recycling hubs, groups with a leaderboard, email sign-in to keep progress,
+and a full English / Bahasa Melayu switch. Live at <https://scan2-recycle.vercel.app>.
 
 ```
 supabase/   Database schema (migrations/) and starter data (seed.sql)
@@ -24,9 +25,10 @@ Open the URL it prints. If something isn't set up, the Scan page shows a **Setup
 
 ### 2. Database (Supabase)
 1. Create a free project at <https://supabase.com>.
-2. **SQL Editor** → paste and run `supabase/setup_all.sql` (everything in one file, safe to re-run). It ends by showing row counts: materials 7, item_types 50.
-   (Same result as running `migrations/001_init.sql` … `004_features.sql` in order, plus `seed.sql`.)
-   Already set up earlier? Just run the newer files you haven't run yet: `003_more_items.sql`, `004_features.sql`.
+2. **SQL Editor** → paste and run `supabase/setup_all.sql` (everything in one file, safe to re-run). It ends by showing row counts: materials 7, item_types 88.
+   (Same result as running `migrations/001_init.sql` … `005_languages_hubs.sql` in order, plus `seed.sql`.)
+   Already set up earlier? Just run the newer files you haven't run yet (latest: `005_languages_hubs.sql`).
+   **Run it in project `bvqctjqhcsuevcgzhyou`** (the browser address must contain it); the app ignores any other project.
 3. **Authentication → Sign In / Providers** → turn on **Allow anonymous sign-ins** (needed to save scans).
    On the same page, under **Email**, turn **off "Confirm email"** so "Save my progress" works without an email service.
    (Supabase's built-in email only sends to your own team's addresses, 2 per hour. To keep confirmations on, set up
@@ -40,9 +42,11 @@ The **service_role / secret** key must never go in the web app.
 > **Table Editor → materials** if your area differs.
 
 ### Running the drop-off map
-- Points come from **OpenStreetMap** plus the team's own list (`recycling_points`).
-- **Approving suggestions:** users can suggest points in the app. They stay hidden until someone ticks **approved** in
-  **Table Editor → recycling_points**. You can also add points there directly (set `approved` to true).
+- Points come from **OpenStreetMap** (live search plus a bundled snapshot of all Malaysian points, `public/osm-points-my.json`)
+  and **community hubs** that anyone can add in the app (`recycling_points`). Added hubs show immediately; people can
+  delete their own. To remove someone else's, delete the row in **Table Editor → recycling_points**.
+- If nothing is within 8 km, the list shows the nearest available points anywhere and says so.
+- Refresh the snapshot every few months with `npm run snapshot-points` (in `web/`) and push.
 - Map tiles are OpenStreetMap's free tiles, fine for a school project. For heavy use, switch to a keyed provider (see `MapView.tsx`).
 
 ### 3. AI (nothing to set up)
@@ -68,4 +72,5 @@ Item labels are embedded ahead of time into `web/public/label-embeddings.json`. 
 | `npm test` | Unit tests (Vitest) |
 | `npm run lint` | Lint (oxlint) |
 | `npm run generate-pwa-assets` | Regenerate app icons from `public/favicon.svg` |
-| `npm run embed-labels` | Recompute `public/label-embeddings.json` from `seed.sql` + the live item list |
+| `npm run embed-labels` | Recompute `public/label-embeddings.json` from `seed.sql`, the migrations and the live item list |
+| `npm run snapshot-points` | Re-download all OpenStreetMap recycling points in Malaysia to `public/osm-points-my.json` |

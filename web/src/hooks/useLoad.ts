@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { msg, type Message } from '../i18n/translate'
 
-type Result<T> = { ok: true; value: T } | { ok: false; error: string }
+type Result<T> = { ok: true; value: T } | { ok: false; error: Message }
 
-export type LoadState<T> = { status: 'loading' } | { status: 'ready'; value: T } | { status: 'error'; error: string }
+export type LoadState<T> = { status: 'loading' } | { status: 'ready'; value: T } | { status: 'error'; error: Message }
 
 /** Runs an async loader on mount (and on reload()), ignoring results that arrive after unmount. */
 export function useLoad<T>(loader: () => Promise<Result<T>>): { state: LoadState<T>; reload: () => void; set: (value: T) => void } {
@@ -16,7 +17,7 @@ export function useLoad<T>(loader: () => Promise<Result<T>>): { state: LoadState
         if (!cancelled) setState(result.ok ? { status: 'ready', value: result.value } : { status: 'error', error: result.error })
       },
       (error: unknown) => {
-        if (!cancelled) setState({ status: 'error', error: error instanceof Error ? error.message : String(error) })
+        if (!cancelled) setState({ status: 'error', error: msg('error.generic', { detail: error instanceof Error ? error.message : String(error) }) })
       },
     )
     return () => {

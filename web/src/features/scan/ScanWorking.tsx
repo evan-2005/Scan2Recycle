@@ -1,3 +1,5 @@
+import { useI18n } from '../../i18n/context'
+
 interface ScanWorkingProps {
   photoUrl: string
   /** Download percentage while the model loads (0 if already cached); null while analysing. */
@@ -5,19 +7,16 @@ interface ScanWorkingProps {
 }
 
 export function ScanWorking({ photoUrl, percent }: ScanWorkingProps) {
+  const { t } = useI18n()
   const isDownloading = percent !== null
   const isSettingUp = percent === 100
-  const title = isDownloading ? 'Getting the AI ready…' : 'Looking at your item…'
-  const detail = isSettingUp
-    ? 'Downloaded. Setting the AI up on your phone, this can take up to a minute.'
-    : isDownloading
-      ? 'First time only: downloading the AI model. After that it loads from your phone.'
-      : 'This takes a second or two.'
+  const title = isDownloading ? t('working.preparing') : t('working.analysing')
+  const detail = isSettingUp ? t('working.settingUp') : isDownloading ? t('working.downloading') : t('working.analysingDetail')
 
   return (
     <div className="flex flex-col items-center pt-6 text-center" role="status" aria-live="polite">
       <div className="relative">
-        <img src={photoUrl} alt="Your photo" className="size-56 rounded-3xl object-cover shadow-lg" />
+        <img src={photoUrl} alt={t('photo.alt')} className="size-56 rounded-3xl object-cover shadow-lg" />
         <div aria-hidden="true" className="absolute inset-0 overflow-hidden rounded-3xl">
           <div className="h-1/3 w-full animate-[scan_1.6s_ease-in-out_infinite_alternate] bg-gradient-to-b from-transparent via-signal/50 to-transparent motion-reduce:hidden" />
         </div>
@@ -29,7 +28,7 @@ export function ScanWorking({ photoUrl, percent }: ScanWorkingProps) {
           <div
             className="h-2 overflow-hidden rounded-full bg-paper-deep"
             role="progressbar"
-            aria-label="AI model download"
+            aria-label={t('working.progressLabel')}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={percent}

@@ -1,4 +1,5 @@
 import { useRef, type ChangeEvent } from 'react'
+import { useI18n } from '../../i18n/context'
 import type { CatalogState } from './useCatalog'
 
 interface ScanStartProps {
@@ -13,16 +14,12 @@ const CAMERA_ICON = (
   </svg>
 )
 
-function statusLine(catalog: CatalogState): string {
-  if (catalog.status === 'loading') return 'Loading the item list…'
-  if (catalog.status === 'error') return "Can't load the item list. Check your connection."
-  return 'Point your camera at one item.'
-}
-
 export function ScanStart({ catalog, onPhoto }: ScanStartProps) {
+  const { t, m } = useI18n()
   const cameraInput = useRef<HTMLInputElement>(null)
   const galleryInput = useRef<HTMLInputElement>(null)
   const isReady = catalog.status === 'ready'
+  const status = catalog.status === 'loading' ? t('scan.statusLoading') : catalog.status === 'error' ? t('scan.statusError') : t('scan.statusReady')
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -45,8 +42,8 @@ export function ScanStart({ catalog, onPhoto }: ScanStartProps) {
         >
           {CAMERA_ICON}
           <span>
-            <span className="block font-display text-2xl font-extrabold">Scan an item</span>
-            <span className="mt-1 block text-sm text-paper/75">{statusLine(catalog)}</span>
+            <span className="block font-display text-2xl font-extrabold">{t('scan.button')}</span>
+            <span className="mt-1 block text-sm text-paper/75">{status}</span>
           </span>
         </button>
       </div>
@@ -57,14 +54,12 @@ export function ScanStart({ catalog, onPhoto }: ScanStartProps) {
         onClick={() => galleryInput.current?.click()}
         className="mt-6 min-h-11 text-sm font-semibold text-forest underline decoration-2 underline-offset-4 disabled:opacity-50"
       >
-        Or choose a photo from your gallery
+        {t('scan.gallery')}
       </button>
 
-      {catalog.status === 'error' && <p className="mt-2 text-sm text-alert">{catalog.message}</p>}
+      {catalog.status === 'error' && <p className="mt-2 text-sm text-alert">{m(catalog.message)}</p>}
 
-      <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-        The AI runs on your phone, so your photo never leaves it. The first scan downloads the AI model (about 100 MB, once), so use Wi-Fi if you can.
-      </p>
+      <p className="mt-4 text-xs leading-relaxed text-ink-soft">{t('scan.privacy')}</p>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { PageHeader } from '../../components/PageHeader'
+import { useI18n } from '../../i18n/context'
 import { SetupStatus } from '../setup/SetupStatus'
 import { ChoicePicker } from './ChoicePicker'
 import { MaterialPicker } from './MaterialPicker'
@@ -10,6 +11,7 @@ import { useCatalog } from './useCatalog'
 import { useScanFlow } from './useScanFlow'
 
 export function ScanPage() {
+  const { t, m } = useI18n()
   const catalog = useCatalog()
   const ready = catalog.status === 'ready' ? catalog.catalog : null
   const flow = useScanFlow(ready)
@@ -45,11 +47,11 @@ export function ScanPage() {
       return <MaterialPicker photoUrl={state.photoUrl} materials={ready?.materials ?? []} onPick={flow.pickMaterial} />
     case 'error':
       return (
-        <div className="pt-10" role="alert">
-          <PageHeader eyebrow="Scan2Recycle" title="That didn't work" />
-          <p className="text-ink-soft">{state.message}</p>
+        <div role="alert">
+          <PageHeader eyebrow={t('scan.eyebrow')} title={t('scan.errorTitle')} />
+          <p className="text-ink-soft">{m(state.message)}</p>
           <button type="button" onClick={flow.reset} className="mt-8 min-h-12 w-full rounded-full bg-forest px-6 font-semibold text-paper">
-            Try again
+            {t('common.tryAgain')}
           </button>
         </div>
       )
@@ -57,17 +59,17 @@ export function ScanPage() {
       return (
         <>
           <PageHeader
-            eyebrow="Scan2Recycle"
+            eyebrow={t('scan.eyebrow')}
             title={
               <>
-                What's in
+                {t('scan.titleLine1')}
                 <br />
-                your hand?
+                {t('scan.titleLine2')}
               </>
             }
           />
           <ScanStart catalog={catalog} onPhoto={flow.start} />
-          {ready && <SearchBox items={ready.itemTypes} materials={ready.materialsById} onPick={flow.showItem} />}
+          {ready && <SearchBox items={ready.itemTypes} materials={ready.materials} materialsById={ready.materialsById} onPick={flow.showItem} />}
           {/* The setup checklist only matters while something is misconfigured. */}
           {catalog.status === 'error' && (
             <div className="mt-10">

@@ -1,6 +1,6 @@
 import type { ItemType } from '../types'
 
-/** Common Malay words → the English words used in item names, so "botol plastik" finds "Plastic Bottle". */
+/** Common Malay words → English, so Malay queries also find items that have no Malay name yet. */
 const MALAY_WORDS: Readonly<Record<string, string>> = {
   botol: 'bottle',
   tin: 'can',
@@ -52,20 +52,33 @@ function stem(word: string): string {
   return word
 }
 
-function queryWords(query: string): string[] {
-  return words(query).map((w) => stem(MALAY_WORDS[w] ?? w))
+/** Each query word as typed (to match Malay names) and translated to English (to match English names). */
+interface Term {
+  raw: string
+  english: string
 }
 
-/** Higher is better; 0 means no match. Every query word must match something. */
-function score(item: ItemType, terms: readonly string[]): number {
-  const nameWords = words(item.display_name).map(stem)
+function queryTerms(query: string): Term[] {
+  return words(query).map((w) => ({ raw: stem(w), english: stem(MALAY_WORDS[w] ?? w) }))
+}
+
+function termScore(term: Term, nameWords: readonly string[], labelWords: readonly string[]): number {
+  const forms = term.raw === term.english ? [term.raw] : [term.raw, term.english]
+  if (forms.some((f) => nameWords.includes(f))) return 3
+  if (forms.some((f) => nameWords.some((w) => w.startsWith(f)))) return 2
+  if (forms.some((f) => labelWords.some((w) => w.startsWith(f)))) return 1
+  return 0
+}
+
+/** Higher is better; 0 means no match. Every query word must match the English or Malay name (or the label). */
+function score(item: ItemType, terms: readonly Term[]): number {
+  const nameWords = [...words(item.display_name), ...words(item.display_name_ms ?? '')].map(stem)
   const labelWords = words(item.label).map(stem)
   let total = 0
   for (const term of terms) {
-    if (nameWords.includes(term)) total += 3
-    else if (nameWords.some((w) => w.startsWith(term))) total += 2
-    else if (labelWords.some((w) => w.startsWith(term))) total += 1
-    else return 0
+    const points = termScore(term, nameWords, labelWords)
+    if (points === 0) return 0
+    total += points
   }
   return total
 }
@@ -73,7 +86,7 @@ function score(item: ItemType, terms: readonly string[]): number {
 /** Finds items for the "Can I recycle…?" box, best match first. */
 export function searchItems(query: string, items: readonly ItemType[]): ItemType[] {
   if (query.trim().length < MIN_QUERY_LENGTH) return []
-  const terms = queryWords(query)
+  const terms = queryTerms(query)
   if (terms.length === 0) return []
   return items
     .map((item) => ({ item, score: score(item, terms) }))

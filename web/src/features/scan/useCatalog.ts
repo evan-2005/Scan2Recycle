@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
-import { fetchCatalog, type Catalog } from '../../lib/catalog'
+import { aiItems, fetchCatalog, type Catalog } from '../../lib/catalog'
+import type { Message } from '../../i18n/translate'
 import type { ItemType, Material, MaterialId } from '../../types'
 
 export interface ReadyCatalog extends Catalog {
+  /** Labels the camera AI compares photos against (items with in_ai = false are search-only). */
   labels: string[]
   itemsByLabel: ReadonlyMap<string, ItemType>
   materialsById: ReadonlyMap<MaterialId, Material>
 }
 
-export type CatalogState = { status: 'loading' } | { status: 'ready'; catalog: ReadyCatalog } | { status: 'error'; message: string }
+export type CatalogState = { status: 'loading' } | { status: 'ready'; catalog: ReadyCatalog } | { status: 'error'; message: Message }
 
 function index(catalog: Catalog): ReadyCatalog {
   return {
     ...catalog,
-    labels: catalog.itemTypes.map((item) => item.label),
+    labels: aiItems(catalog.itemTypes).map((item) => item.label),
     itemsByLabel: new Map(catalog.itemTypes.map((item) => [item.label, item])),
     materialsById: new Map(catalog.materials.map((material) => [material.id, material])),
   }

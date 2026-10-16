@@ -1,8 +1,9 @@
+import { msg, type Message } from '../i18n/translate'
 import { ensureSession } from './auth'
 import { describeDbError } from './dbErrors'
 import { supabase } from './supabase'
 
-type Result<T> = { ok: true; value: T } | { ok: false; error: string }
+type Result<T> = { ok: true; value: T } | { ok: false; error: Message }
 
 export interface Group {
   id: string
@@ -36,20 +37,30 @@ export function cleanName(input: string): string {
   return input.trim().replace(/\s+/g, ' ')
 }
 
-export function validateGroupName(input: string): string | null {
+export function validateGroupName(input: string): Message | null {
   const name = cleanName(input)
-  return name.length >= 2 && name.length <= 60 ? null : 'Group name must be 2–60 characters.'
+  return name.length >= 2 && name.length <= 60 ? null : msg('groups.errorGroupName')
 }
 
-export function validateDisplayName(input: string): string | null {
+export function validateDisplayName(input: string): Message | null {
   const name = cleanName(input)
-  return name.length >= 1 && name.length <= 30 ? null : 'Display name must be 1–30 characters.'
+  return name.length >= 1 && name.length <= 30 ? null : msg('groups.errorDisplayName')
 }
 
-/** Database functions raise friendly messages; strip Postgres prefixes, and explain a missing setup. */
-function messageOf(error: { message: string }): string {
-  const message = error.message.replace(/^.*?ERROR:\s*/, '')
-  return /schema cache|does not exist/i.test(message) ? describeDbError(message, 'Groups') : message
+/** The database functions in 004_features.sql raise these English messages; map them to translatable ones. */
+const DB_MESSAGES: readonly [RegExp, Message][] = [
+  [/no group has that code/i, msg('groups.errorNoSuchCode')],
+  [/up to 10 groups/i, msg('groups.errorTooMany')],
+  [/not in this group/i, msg('groups.errorNotMember')],
+  [/display name must be/i, msg('groups.errorDisplayName')],
+]
+
+export function messageOf(error: { message: string }): Message {
+  const text = error.message.replace(/^.*?ERROR:\s*/, '')
+  const known = DB_MESSAGES.find(([pattern]) => pattern.test(text))
+  if (known) return known[1]
+  if (/schema cache|does not exist/i.test(text)) return describeDbError(text)
+  return msg('groups.errorFailed', { detail: text })
 }
 
 async function signedIn<T>(run: () => Promise<Result<T>>): Promise<Result<T>> {
@@ -65,7 +76,7 @@ export function createGroup(name: string, displayName: string): Promise<Result<G
   return signedIn(async () => {
     const { data, error } = await supabase!.rpc('create_group', { p_name: cleanName(name), p_display_name: cleanName(displayName) })
     const group = firstRow(data)
-    if (error || !group) return { ok: false, error: error ? messageOf(error) : 'Could not create the group.' }
+    if (error || !group) return { ok: false, error: error ? messageOf(error) : msg('groups.errorFailed', { detail: 'create_group' }) }
     return { ok: true, value: group }
   })
 }
@@ -74,7 +85,7 @@ export function joinGroup(code: string, displayName: string): Promise<Result<Gro
   return signedIn(async () => {
     const { data, error } = await supabase!.rpc('join_group', { p_code: code, p_display_name: cleanName(displayName) })
     const group = firstRow(data)
-    if (error || !group) return { ok: false, error: error ? messageOf(error) : 'Could not join the group.' }
+    if (error || !group) return { ok: false, error: error ? messageOf(error) : msg('groups.errorFailed', { detail: 'join_group' }) }
     return { ok: true, value: group }
   })
 }
@@ -97,7 +108,7 @@ export async function fetchMyGroups(): Promise<Result<Membership[]>> {
   const { data: session } = await supabase.auth.getSession()
   if (!session.session) return { ok: true, value: [] }
   const { data, error } = await supabase.from('group_members').select('display_name, groups(id, name, join_code)').order('joined_at')
-  if (error) return { ok: false, error: describeDbError(error.message, 'Groups') }
+  if (error) return { ok: false, error: describeDbError(error.message) }
   const rows = (data ?? []) as unknown as MembershipRow[]
   return {
     ok: true,

@@ -430,3 +430,22 @@ Database: `supabase/migrations/004_features.sql` (also in `setup_all.sql`). Grou
 names and totals. All rules were tested on a local Postgres with three simulated users.
 
 Privacy: the user's location is used only on the phone to sort the list; it is never saved or sent to Supabase.
+
+---
+
+## 15. Languages, open hubs and more items (Oct 2026)
+
+Decided with the team: English is the standard language (and the default); Bahasa Melayu is a switch on every page.
+Anyone can add a recycling hub and it shows immediately, with no moderation (10 a day per person as spam protection;
+people can delete their own).
+
+| Change | Details |
+|---|---|
+| **EN / BM switch** | All UI text in `web/src/i18n/en.ts` + `ms.ts` (a test checks both have the same keys and placeholders). Item, material and bin names and tips come from new `*_ms` columns, falling back to English. Library code returns message keys, never English sentences. |
+| **Search in both languages** | Matches English and Malay item names, plus a small Malay→English word list; "Browse all items" lists everything grouped by material. |
+| **88 items** | 38 added (shoe box, book, receipt, cooking-oil bottle, laptop, power bank, eggshells, tea bag, diaper, paint tin…). |
+| **AI accuracy kept** | All 88 as camera labels dropped TrashNet right-bin accuracy from 80% to 77%. Marking receipt, milk carton and food wrapper search-only (`in_ai = false`) brought it to **81%** (94% top-3). |
+| **Nothing nearby** | Live search 8 km → 60 km; plus a bundled snapshot of all 250 OSM recycling points in Malaysia, so the list always shows the nearest available, with a note when nothing is within 8 km. |
+| **Unreliable Overpass** | Mirror first, pauses between requests, keeps partial results, stale-cache fallback; the snapshot covers total outages. |
+
+Database: `supabase/migrations/005_languages_hubs.sql` (also folded into `setup_all.sql`).

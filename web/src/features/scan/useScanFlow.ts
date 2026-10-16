@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { msg, type Message } from '../../i18n/translate'
 import { classifyImage, prepareClassifier } from '../../lib/classifier/client'
 import { decide } from '../../lib/classifier/decide'
 import { prepareImage, validateImageFile } from '../../lib/image'
@@ -18,12 +19,10 @@ export interface ScanFlow {
   reset: () => void
 }
 
-function friendlyError(error: unknown): string {
+function friendlyError(error: unknown): Message {
   const message = error instanceof Error ? error.message : String(error)
-  if (/fetch|network|load the AI model/i.test(message)) {
-    return "Couldn't download the AI model. Check your internet connection and try again."
-  }
-  return `Something went wrong while reading the photo. (${message})`
+  if (/fetch|network|load the AI model/i.test(message)) return msg('error.modelDownload')
+  return msg('error.photo', { detail: message })
 }
 
 /** Runs one scan: shrink photo → load model (first time) → classify → decide. */

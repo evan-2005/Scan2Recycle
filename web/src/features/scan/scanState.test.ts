@@ -91,8 +91,8 @@ describe('scanReducer', () => {
   })
 
   it('shows errors and resets', () => {
-    const failed = scanReducer(analysing, { type: 'failed', message: 'offline' })
-    expect(failed).toEqual({ step: 'error', message: 'offline' })
+    const failed = scanReducer(analysing, { type: 'failed', message: { key: 'error.modelDownload' } })
+    expect(failed).toEqual({ step: 'error', message: { key: 'error.modelDownload' } })
     expect(scanReducer(failed, { type: 'reset' })).toBe(INITIAL_STATE)
   })
 })

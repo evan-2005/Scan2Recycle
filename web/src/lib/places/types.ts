@@ -2,15 +2,6 @@
 export const POINT_MATERIALS = ['paper', 'plastic', 'metal', 'glass', 'e-waste', 'clothes', 'organic'] as const
 export type PointMaterial = (typeof POINT_MATERIALS)[number]
 
-export const POINT_MATERIAL_LABELS: Readonly<Record<PointMaterial, string>> = {
-  paper: 'Paper',
-  plastic: 'Plastic',
-  metal: 'Metal & cans',
-  glass: 'Glass',
-  'e-waste': 'E-waste',
-  clothes: 'Clothes',
-  organic: 'Food & garden',
-}
 
 export interface LatLng {
   lat: number
@@ -26,8 +17,10 @@ export interface DropOffPoint extends LatLng {
   openingHours: string | null
   address: string | null
   source: 'osm' | 'team'
-  /** A team-list suggestion that only its author can see until approved. */
+  /** Hidden from everyone else (the team unticked "approved" in Supabase); its author still sees it. */
   isPending: boolean
+  /** Added by the current user, so they can delete it. */
+  isMine: boolean
 }
 
 export function isPointMaterial(value: string): value is PointMaterial {

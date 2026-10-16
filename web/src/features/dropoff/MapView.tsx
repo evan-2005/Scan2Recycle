@@ -1,6 +1,7 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef } from 'react'
+import { useI18n } from '../../i18n/context'
 import type { DropOffPoint, LatLng } from '../../lib/places/types'
 import { MARKER_STYLES } from './markerStyles'
 
@@ -32,6 +33,7 @@ interface MapViewProps {
 }
 
 export function MapView({ centre, points, userPosition, selectedId, onSelect, pickedLocation, isPicking, onPick, onMoveEnd }: MapViewProps) {
+  const { t } = useI18n()
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const pointLayer = useRef<L.LayerGroup | null>(null)
@@ -72,7 +74,7 @@ export function MapView({ centre, points, userPosition, selectedId, onSelect, pi
     layer.clearLayers()
     for (const point of points) {
       const marker = L.circleMarker([point.lat, point.lng], styleFor(point, point.id === selectedId))
-      marker.bindTooltip(point.name ?? (point.kind === 'container' ? 'Recycling bin' : 'Recycling point'))
+      marker.bindTooltip(point.name ?? t(point.kind === 'container' ? 'point.bin' : 'point.point'))
       marker.on('click', (event) => {
         L.DomEvent.stopPropagation(event)
         if (!handlers.current.isPicking) handlers.current.onSelect(point.id)
@@ -80,7 +82,7 @@ export function MapView({ centre, points, userPosition, selectedId, onSelect, pi
       marker.addTo(layer)
       if (point.id === selectedId) marker.bringToFront()
     }
-  }, [points, selectedId])
+  }, [points, selectedId, t])
 
   useEffect(() => {
     const layer = overlayLayer.current
@@ -88,15 +90,15 @@ export function MapView({ centre, points, userPosition, selectedId, onSelect, pi
     layer.clearLayers()
     if (userPosition) {
       L.circleMarker([userPosition.lat, userPosition.lng], { radius: 8, color: '#ffffff', weight: 3, fillColor: '#2f6fb5', fillOpacity: 1 })
-        .bindTooltip('You are here')
+        .bindTooltip(t('dropoff.youAreHere'))
         .addTo(layer)
     }
     if (pickedLocation) {
       L.circleMarker([pickedLocation.lat, pickedLocation.lng], { radius: 12, color: '#b3412e', weight: 3, fillColor: '#ffffff', fillOpacity: 0.9 })
-        .bindTooltip('New point', { permanent: true, direction: 'top' })
+        .bindTooltip(t('dropoff.newPoint'), { permanent: true, direction: 'top' })
         .addTo(layer)
     }
-  }, [userPosition, pickedLocation])
+  }, [userPosition, pickedLocation, t])
 
   useEffect(() => {
     container.current?.classList.toggle('cursor-crosshair', isPicking)
@@ -107,7 +109,7 @@ export function MapView({ centre, points, userPosition, selectedId, onSelect, pi
       ref={container}
       className="h-[45dvh] min-h-64 w-full overflow-hidden rounded-3xl shadow-md ring-1 ring-ink/10"
       role="region"
-      aria-label="Map of recycling points"
+      aria-label={t('dropoff.mapLabel')}
     />
   )
 }

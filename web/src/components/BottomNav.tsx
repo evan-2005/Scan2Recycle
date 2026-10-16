@@ -1,18 +1,20 @@
+import type { MessageKey } from '../i18n/en'
+import { useI18n } from '../i18n/context'
 import { routeHref, type Route } from '../lib/routes'
 
 interface NavItem {
   route: Route
-  label: string
+  label: MessageKey
   icon: string
   /** Other routes that should highlight this tab (e.g. History lives under My Recycling). */
   also?: readonly Route[]
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { route: 'scan', label: 'Scan', icon: 'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
-  { route: 'dropoff', label: 'Drop-off', icon: 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6' },
-  { route: 'groups', label: 'Groups', icon: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8' },
-  { route: 'stats', label: 'My Recycling', icon: 'M5 20V11M12 20V4M19 20v-6', also: ['history'] },
+  { route: 'scan', label: 'nav.scan', icon: 'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
+  { route: 'dropoff', label: 'nav.dropoff', icon: 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6' },
+  { route: 'groups', label: 'nav.groups', icon: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8' },
+  { route: 'stats', label: 'nav.stats', icon: 'M5 20V11M12 20V4M19 20v-6', also: ['history'] },
 ]
 
 interface BottomNavProps {
@@ -20,9 +22,10 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ current }: BottomNavProps) {
+  const { t } = useI18n()
   return (
     <nav
-      aria-label="Main navigation"
+      aria-label={t('nav.label')}
       className="fixed inset-x-0 bottom-0 z-10 border-t border-ink/10 bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex max-w-md">
@@ -49,7 +52,7 @@ export function BottomNav({ current }: BottomNavProps) {
                 >
                   <path d={item.icon} />
                 </svg>
-                {item.label}
+                {t(item.label)}
               </a>
             </li>
           )

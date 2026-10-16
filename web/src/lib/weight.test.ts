@@ -19,12 +19,12 @@ describe('parseWeight', () => {
   })
 
   it.each(['abc', '-5', '1e3', '12g', '1.2.3'])('rejects %j', (input) => {
-    expect(parseWeight(input)).toMatchObject({ ok: false })
+    expect(parseWeight(input)).toEqual({ ok: false, error: { key: 'error.weightNumber' } })
   })
 
   it('rejects weights that round to zero, and absurd weights', () => {
-    expect(parseWeight('0')).toMatchObject({ ok: false, error: expect.stringMatching(/at least 0.1/) })
-    expect(parseWeight('0.04')).toMatchObject({ ok: false, error: expect.stringMatching(/at least 0.1/) })
-    expect(parseWeight('50000')).toMatchObject({ ok: false, error: expect.stringMatching(/50 kg/) })
+    expect(parseWeight('0')).toEqual({ ok: false, error: { key: 'error.weightMin' } })
+    expect(parseWeight('0.04')).toEqual({ ok: false, error: { key: 'error.weightMin' } })
+    expect(parseWeight('50000')).toEqual({ ok: false, error: { key: 'error.weightMax' } })
   })
 })

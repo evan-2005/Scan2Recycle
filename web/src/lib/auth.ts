@@ -1,11 +1,12 @@
+import { msg, type Message } from '../i18n/translate'
 import { supabase } from './supabase'
 
-export type SessionResult = { ok: true; userId: string } | { ok: false; error: string }
+export type SessionResult = { ok: true; userId: string } | { ok: false; error: Message }
 
 let inFlight: Promise<SessionResult> | null = null
 
 async function signIn(): Promise<SessionResult> {
-  if (!supabase) return { ok: false, error: 'Supabase is not configured (see web/.env.example).' }
+  if (!supabase) return { ok: false, error: msg('error.notConfigured') }
 
   const { data: existing } = await supabase.auth.getSession()
   if (existing.session) return { ok: true, userId: existing.session.user.id }
@@ -15,9 +16,7 @@ async function signIn(): Promise<SessionResult> {
     const disabled = /anonymous/i.test(error?.message ?? '')
     return {
       ok: false,
-      error: disabled
-        ? 'Saving is switched off: turn on "Allow anonymous sign-ins" in Supabase → Authentication → Sign In / Providers.'
-        : `Could not sign in: ${error?.message ?? 'unknown error'}`,
+      error: disabled ? msg('error.anonDisabled') : msg('error.signInFailed', { detail: error?.message ?? 'unknown error' }),
     }
   }
   return { ok: true, userId: data.user.id }

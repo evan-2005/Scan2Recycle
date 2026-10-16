@@ -1,3 +1,5 @@
+import { msg, type Message } from '../i18n/translate'
+
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024
 /** CLIP looks at 224 px, so anything much bigger only costs memory and time on the phone. */
 export const MAX_IMAGE_SIDE = 512
@@ -9,10 +11,10 @@ interface FileLike {
 }
 
 /** Returns a user-facing error message, or null if the file looks like a usable photo. */
-export function validateImageFile(file: FileLike): string | null {
-  if (!file.type.startsWith('image/')) return 'That file is not an image. Please choose a photo.'
-  if (file.size === 0) return 'That photo is empty. Please try another one.'
-  if (file.size > MAX_IMAGE_BYTES) return 'That photo is too large (max 20 MB). Please try another one.'
+export function validateImageFile(file: FileLike): Message | null {
+  if (!file.type.startsWith('image/')) return msg('error.imageType')
+  if (file.size === 0) return msg('error.imageEmpty')
+  if (file.size > MAX_IMAGE_BYTES) return msg('error.imageSize')
   return null
 }
 

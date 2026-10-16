@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useI18n } from '../../i18n/context'
 import { currentStreak, GOAL_OPTIONS_KG, parseGoal, weekProgress, type DatedLog } from '../../lib/streaks'
 import { formatWeight } from '../../lib/totals'
 
@@ -26,6 +27,7 @@ interface StreakCardProps {
 
 /** Streak and weekly-goal progress, worked out from the user's saved items. The goal is a per-device preference. */
 export function StreakCard({ logs }: StreakCardProps) {
+  const { t, n } = useI18n()
   const [goal, setGoal] = useState(readGoal)
   // Read the clock once per visit to the page, not on every render.
   const [now] = useState(() => new Date())
@@ -45,21 +47,21 @@ export function StreakCard({ logs }: StreakCardProps) {
           {streak > 0 ? '🔥' : '🌱'}
         </span>
         <span className="mt-1 font-display text-3xl leading-none font-extrabold tabular-nums">{streak}</span>
-        <span className="mt-1 text-xs font-semibold">day streak</span>
+        <span className="mt-1 text-xs font-semibold">{t('streak.days')}</span>
       </div>
 
       <div className="rounded-3xl bg-white/80 p-4 shadow-sm">
         <h2 id="week-heading" className="text-xs font-semibold uppercase tracking-wider text-ink-soft">
-          This week
+          {t('streak.thisWeek')}
         </h2>
         <p className="mt-1">
           <strong className="font-display text-2xl font-extrabold tabular-nums">{formatWeight(week.kg)}</strong>
-          <span className="text-sm text-ink-soft"> of {formatWeight(goal)} goal</span>
+          <span className="text-sm text-ink-soft"> {t('streak.ofGoal', { goal: formatWeight(goal) })}</span>
         </p>
         <div
           className="mt-2 h-2.5 overflow-hidden rounded-full bg-paper-deep"
           role="progressbar"
-          aria-label="Weekly goal"
+          aria-label={t('streak.goalLabel')}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(week.fraction * 100)}
@@ -68,11 +70,11 @@ export function StreakCard({ logs }: StreakCardProps) {
         </div>
         <p className="mt-2 text-xs text-ink-soft">
           {isGoalMet
-            ? '🎉 Goal reached! Nice work.'
-            : `${week.items} ${week.items === 1 ? 'item' : 'items'} so far · ${week.daysLeft} ${week.daysLeft === 1 ? 'day' : 'days'} left`}
+            ? t('streak.goalReached')
+            : t('streak.progress', { items: n('common.items', week.items), days: n('common.days', week.daysLeft) })}
         </p>
         <label className="mt-2 flex items-center gap-2 text-xs text-ink-soft">
-          Goal
+          {t('streak.goal')}
           <select
             value={goal}
             onChange={(e) => changeGoal(Number(e.target.value))}
@@ -80,13 +82,13 @@ export function StreakCard({ logs }: StreakCardProps) {
           >
             {GOAL_OPTIONS_KG.map((kg) => (
               <option key={kg} value={kg}>
-                {formatWeight(kg)} a week
+                {t('streak.perWeek', { weight: formatWeight(kg) })}
               </option>
             ))}
           </select>
         </label>
       </div>
-      {streak === 0 && <p className="col-span-2 text-xs text-ink-soft">Save an item today to start a streak.</p>}
+      {streak === 0 && <p className="col-span-2 text-xs text-ink-soft">{t('streak.start')}</p>}
     </section>
   )
 }

@@ -1,4 +1,5 @@
 import { PageHeader } from '../../components/PageHeader'
+import { useI18n } from '../../i18n/context'
 import { useHashParam } from '../../hooks/useHashRoute'
 import { useLoad } from '../../hooks/useLoad'
 import { fetchMyGroups, type Group } from '../../lib/groups'
@@ -11,6 +12,7 @@ function openGroup(group: Group) {
 }
 
 export function GroupsPage() {
+  const { t, m } = useI18n()
   const selectedId = useHashParam('id')
   const { state, reload } = useLoad(fetchMyGroups)
   const memberships = state.status === 'ready' ? state.value : []
@@ -31,24 +33,24 @@ export function GroupsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Groups" title="Recycle together" />
-      <p className="-mt-2 text-sm text-ink-soft">Team up with your class, CCA or neighbours and see how much you recycle together.</p>
+      <PageHeader eyebrow={t('groups.eyebrow')} title={t('groups.title')} />
+      <p className="-mt-2 text-sm text-ink-soft">{t('groups.intro')}</p>
 
-      {state.status === 'loading' && <p className="mt-6 text-ink-soft">Loading your groups…</p>}
+      {state.status === 'loading' && <p className="mt-6 text-ink-soft">{t('groups.loading')}</p>}
       {state.status === 'error' && (
         <p role="alert" className="mt-6 text-sm text-alert">
-          {state.error}
+          {m(state.error)}
         </p>
       )}
       {memberships.length > 0 && (
-        <ul className="mt-6 flex flex-col gap-3" aria-label="Your groups">
+        <ul className="mt-6 flex flex-col gap-3" aria-label={t('groups.listLabel')}>
           {memberships.map(({ group, displayName }) => (
             <li key={group.id}>
               <a href={routeHref('groups', { id: group.id })} className="flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-forest transition hover:ring-2">
                 <span className="min-w-0">
                   <span className="block truncate font-display text-xl font-extrabold">{group.name}</span>
                   <span className="block text-xs text-ink-soft">
-                    You're “{displayName}” · code <span className="font-mono tracking-wider">{group.join_code}</span>
+                    {t('groups.youAre', { name: displayName })} <span className="font-mono tracking-wider">{group.join_code}</span>
                   </span>
                 </span>
                 <span aria-hidden="true" className="text-xl text-forest">

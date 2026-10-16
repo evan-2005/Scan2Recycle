@@ -7,12 +7,12 @@ describe('validateImageFile', () => {
   })
 
   it.each([
-    [{ type: 'application/pdf', size: 1000 }, /not an image/],
-    [{ type: '', size: 1000 }, /not an image/],
-    [{ type: 'image/png', size: 0 }, /empty/],
-    [{ type: 'image/png', size: MAX_IMAGE_BYTES + 1 }, /too large/],
-  ])('rejects %j', (file, message) => {
-    expect(validateImageFile(file)).toMatch(message)
+    [{ type: 'application/pdf', size: 1000 }, 'error.imageType'],
+    [{ type: '', size: 1000 }, 'error.imageType'],
+    [{ type: 'image/png', size: 0 }, 'error.imageEmpty'],
+    [{ type: 'image/png', size: MAX_IMAGE_BYTES + 1 }, 'error.imageSize'],
+  ])('rejects %j', (file, key) => {
+    expect(validateImageFile(file)).toEqual({ key })
   })
 })
 

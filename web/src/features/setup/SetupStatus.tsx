@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { config, isSupabaseConfigured } from '../../lib/env'
+import { useI18n } from '../../i18n/context'
+import type { Message } from '../../i18n/translate'
 import { fetchMaterials } from '../../lib/catalog'
+import { config, isSupabaseConfigured } from '../../lib/env'
 
 type DbState =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'ok'; count: number }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: Message }
 
 interface CheckRowProps {
   label: string
@@ -15,19 +17,18 @@ interface CheckRowProps {
 }
 
 function CheckRow({ label, ok, detail }: CheckRowProps) {
+  const { t } = useI18n()
   return (
     <li className="flex items-start gap-3 py-2">
       <span
         aria-hidden="true"
-        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold text-paper ${
-          ok ? 'bg-forest' : 'bg-alert'
-        }`}
+        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold text-paper ${ok ? 'bg-forest' : 'bg-alert'}`}
       >
         {ok ? '✓' : '!'}
       </span>
       <div>
         <p className="text-sm font-semibold">
-          {label} <span className="sr-only">{ok ? 'ready' : 'not ready'}</span>
+          {label} <span className="sr-only">{ok ? t('setup.ready') : t('setup.notReady')}</span>
         </p>
         <p className="text-xs text-ink-soft">{detail}</p>
       </div>
@@ -35,9 +36,9 @@ function CheckRow({ label, ok, detail }: CheckRowProps) {
   )
 }
 
-/** Setup checklist: shows whether env vars are set and the database seed is reachable.
- *  The AI model needs no setup; it downloads from the Hugging Face Hub on the first scan. */
+/** Setup checklist, shown only when something is misconfigured. The AI model needs no setup. */
 export function SetupStatus() {
+  const { t, m } = useI18n()
   const supabaseReady = isSupabaseConfigured(config)
   const [db, setDb] = useState<DbState>({ status: supabaseReady ? 'checking' : 'idle' })
 
@@ -55,25 +56,21 @@ export function SetupStatus() {
 
   const dbDetail =
     db.status === 'ok'
-      ? `${db.count} materials loaded from the seed.`
+      ? t('setup.dbOk', { n: db.count })
       : db.status === 'error'
-        ? `Could not read materials: ${db.message}`
+        ? m(db.message)
         : db.status === 'checking'
-          ? 'Checking…'
-          : 'Waiting for Supabase keys.'
+          ? t('setup.dbChecking')
+          : t('setup.dbWaiting')
 
   return (
     <section aria-labelledby="setup-heading" className="rounded-2xl border border-dashed border-ink/20 bg-paper-deep/60 p-4">
       <h2 id="setup-heading" className="text-sm font-semibold uppercase tracking-wider text-ink-soft">
-        Setup check
+        {t('setup.heading')}
       </h2>
       <ul className="mt-2 divide-y divide-ink/10">
-        <CheckRow
-          label="Supabase keys"
-          ok={supabaseReady}
-          detail={supabaseReady ? 'URL and anon key found.' : 'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to web/.env.local.'}
-        />
-        <CheckRow label="Database seeded" ok={db.status === 'ok'} detail={dbDetail} />
+        <CheckRow label={t('setup.keys')} ok={supabaseReady} detail={supabaseReady ? t('setup.keysFound') : t('setup.keysMissing')} />
+        <CheckRow label={t('setup.db')} ok={db.status === 'ok'} detail={dbDetail} />
       </ul>
     </section>
   )

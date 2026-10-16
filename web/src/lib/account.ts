@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js'
+import { msg, type Message } from '../i18n/translate'
 import { ensureSession } from './auth'
 import { supabase } from './supabase'
 
@@ -12,7 +13,7 @@ export type Account =
   /** Email added but waiting for the user to click the confirmation link. */
   | { kind: 'pending'; email: string }
 
-type Result<T> = { ok: true; value: T } | { ok: false; error: string }
+type Result<T> = { ok: true; value: T } | { ok: false; error: Message }
 
 export function accountFromUser(user: Pick<User, 'is_anonymous' | 'email' | 'new_email'> | null): Account {
   if (!user) return { kind: 'none' }
@@ -22,34 +23,30 @@ export function accountFromUser(user: Pick<User, 'is_anonymous' | 'email' | 'new
 }
 
 export interface CredentialErrors {
-  email?: string
-  password?: string
+  email?: Message
+  password?: Message
 }
 
-export function validatePassword(password: string): string | null {
-  return password.length < MIN_PASSWORD_LENGTH ? `Use at least ${MIN_PASSWORD_LENGTH} characters.` : null
+export function validatePassword(password: string): Message | null {
+  return password.length < MIN_PASSWORD_LENGTH ? msg('error.password', { n: MIN_PASSWORD_LENGTH }) : null
 }
 
 export function validateCredentials(email: string, password: string): CredentialErrors {
   const errors: CredentialErrors = {}
-  if (!EMAIL_PATTERN.test(email.trim())) errors.email = 'Enter a valid email address.'
+  if (!EMAIL_PATTERN.test(email.trim())) errors.email = msg('error.email')
   const passwordProblem = validatePassword(password)
   if (passwordProblem) errors.password = passwordProblem
   return errors
 }
 
 /** Supabase error messages, turned into something a student can act on. */
-export function friendlyAuthError(message: string): string {
-  if (/already (been )?registered|already exists/i.test(message)) {
-    return 'That email already has an account. Use "Sign in" instead (scans saved on this device won\'t move over).'
-  }
-  if (/not authorized/i.test(message)) {
-    return "Supabase can't send email to that address yet. Ask the team to turn off \"Confirm email\" or set up an email service (README)."
-  }
-  if (/rate limit|too many/i.test(message)) return 'Too many attempts. Wait a few minutes and try again.'
-  if (/invalid login credentials/i.test(message)) return 'Wrong email or password.'
-  if (/password/i.test(message)) return message
-  return `Something went wrong: ${message}`
+export function friendlyAuthError(message: string): Message {
+  if (/already (been )?registered|already exists/i.test(message)) return msg('error.emailExists')
+  if (/not authorized/i.test(message)) return msg('error.emailNotAuthorized')
+  if (/rate limit|too many/i.test(message)) return msg('error.rateLimit')
+  if (/invalid login credentials/i.test(message)) return msg('error.wrongLogin')
+  if (/password/i.test(message)) return msg('error.weakPassword')
+  return msg('error.generic', { detail: message })
 }
 
 /**
@@ -76,7 +73,7 @@ export async function setPassword(password: string): Promise<Result<null>> {
 
 /** Signs in to an existing account on this device. Anonymous scans already on this device stay with that anonymous user. */
 export async function signInWithEmail(email: string, password: string): Promise<Result<Account>> {
-  if (!supabase) return { ok: false, error: 'Supabase is not configured.' }
+  if (!supabase) return { ok: false, error: msg('error.notConfigured') }
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
   return error ? { ok: false, error: friendlyAuthError(error.message) } : { ok: true, value: accountFromUser(data.user) }
 }

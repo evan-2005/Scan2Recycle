@@ -51,6 +51,7 @@ describe('parseOverpass', () => {
         lng: 101.6,
         source: 'osm',
         isPending: false,
+        isMine: false,
       },
       {
         id: 'osm:way/2',
@@ -63,6 +64,7 @@ describe('parseOverpass', () => {
         lng: 101.7,
         source: 'osm',
         isPending: false,
+        isMine: false,
       },
     ])
   })

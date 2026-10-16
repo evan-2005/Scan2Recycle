@@ -1,4 +1,5 @@
 import type { Decision, ScoredItem } from '../../lib/classifier/decide'
+import type { Message } from '../../i18n/translate'
 import type { ItemType, Material, MaterialId } from '../../types'
 
 export interface Answer {
@@ -18,7 +19,7 @@ export type ScanState =
   | { step: 'answer'; photoUrl: string | null; answer: Answer; options: ScoredItem[] }
   | { step: 'choose'; photoUrl: string; options: ScoredItem[] }
   | { step: 'pick-material'; photoUrl: string | null; options: ScoredItem[] }
-  | { step: 'error'; message: string }
+  | { step: 'error'; message: Message }
 
 export type ScanEvent =
   | { type: 'loading-model'; photoUrl: string; percent: number }
@@ -29,7 +30,7 @@ export type ScanEvent =
   | { type: 'change' }
   | { type: 'none-of-these' }
   | { type: 'material-picked'; material: Material }
-  | { type: 'failed'; message: string }
+  | { type: 'failed'; message: Message }
   | { type: 'reset' }
 
 export const INITIAL_STATE: ScanState = { step: 'idle' }

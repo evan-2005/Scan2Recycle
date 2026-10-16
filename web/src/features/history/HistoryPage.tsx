@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
+import { useI18n } from '../../i18n/context'
+import { itemName, materialName } from '../../i18n/localize'
+import type { Message } from '../../i18n/translate'
 import { useLoad } from '../../hooks/useLoad'
 import { fetchMaterials } from '../../lib/catalog'
 import { deleteLog, fetchHistory, type HistoryEntry } from '../../lib/logs'
@@ -17,8 +20,6 @@ async function loadHistory() {
   return { ok: true as const, value: { entries: history.value, materials: new Map(materials.materials.map((m) => [m.id, m])) } }
 }
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-
 interface EntryRowProps {
   entry: HistoryEntry
   material: Material | undefined
@@ -26,11 +27,14 @@ interface EntryRowProps {
 }
 
 function EntryRow({ entry, material, onDelete }: EntryRowProps) {
+  const { t, lang, locale } = useI18n()
   const [isDeleting, setIsDeleting] = useState(false)
-  const name = entry.item_types?.display_name ?? `${material?.display_name ?? entry.material_id} item`
+  const materialLabel = material ? materialName(material, lang) : entry.material_id
+  const name = entry.item_types ? itemName(entry.item_types, lang) : t('result.unknownItem', { material: materialLabel })
+  const date = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(entry.created_at))
 
   async function handleDelete() {
-    if (!window.confirm(`Delete "${name}" from your recycling?`)) return
+    if (!window.confirm(t('history.deleteConfirm', { name }))) return
     setIsDeleting(true)
     await onDelete(entry.id)
     setIsDeleting(false)
@@ -42,15 +46,14 @@ function EntryRow({ entry, material, onDelete }: EntryRowProps) {
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">{name}</p>
         <p className="text-xs text-ink-soft">
-          {material?.display_name ?? entry.material_id} · {entry.weight_g !== null ? `${entry.weight_g} g` : 'no weight'} ·{' '}
-          {dateFormat.format(new Date(entry.created_at))}
+          {materialLabel} · {entry.weight_g !== null ? `${entry.weight_g} g` : t('history.noWeight')} · {date}
         </p>
       </div>
       <button
         type="button"
         onClick={handleDelete}
         disabled={isDeleting}
-        aria-label={`Delete ${name}`}
+        aria-label={t('history.deleteLabel', { name })}
         className="grid size-11 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-alert/10 hover:text-alert disabled:opacity-40"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
@@ -62,8 +65,9 @@ function EntryRow({ entry, material, onDelete }: EntryRowProps) {
 }
 
 export function HistoryPage() {
+  const { t, m } = useI18n()
   const { state, reload, set } = useLoad<HistoryData>(loadHistory)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<Message | null>(null)
 
   async function handleDelete(id: string) {
     if (state.status !== 'ready') return
@@ -78,26 +82,24 @@ export function HistoryPage() {
 
   return (
     <>
-      <PageHeader eyebrow="History" title="Every item you've saved" />
-      {state.status === 'loading' && <p className="text-ink-soft">Loading…</p>}
+      <PageHeader eyebrow={t('history.eyebrow')} title={t('history.title')} />
+      {state.status === 'loading' && <p className="text-ink-soft">{t('common.loading')}</p>}
       {state.status === 'error' && (
         <div role="alert" className="rounded-2xl border border-alert/30 p-4">
-          <p className="text-sm text-alert">{state.error}</p>
+          <p className="text-sm text-alert">{m(state.error)}</p>
           <button type="button" onClick={reload} className="mt-3 min-h-11 font-semibold text-forest underline underline-offset-4">
-            Try again
+            {t('common.tryAgain')}
           </button>
         </div>
       )}
       {deleteError && (
         <p role="alert" className="mb-3 text-sm text-alert">
-          {deleteError}
+          {m(deleteError)}
         </p>
       )}
       {state.status === 'ready' &&
         (state.value.entries.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-ink/20 p-6 text-center text-sm text-ink-soft">
-            Nothing saved yet. Items you save after scanning appear here.
-          </p>
+          <p className="rounded-2xl border border-dashed border-ink/20 p-6 text-center text-sm text-ink-soft">{t('history.empty')}</p>
         ) : (
           <ul className="divide-y divide-ink/10 rounded-2xl bg-white/70 px-4">
             {state.value.entries.map((entry) => (

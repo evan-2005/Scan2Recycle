@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useI18n } from '../../i18n/context'
+import { msg, type Message } from '../../i18n/translate'
 import { createGroup, joinGroup, normalizeJoinCode, validateDisplayName, validateGroupName, type Group } from '../../lib/groups'
 
 type Mode = 'join' | 'create'
@@ -12,19 +14,19 @@ interface GroupFormsProps {
 
 /** Join with a code, or create a new group; both ask for the name others will see. */
 export function GroupForms({ onDone }: GroupFormsProps) {
+  const { t, m } = useI18n()
   const [mode, setMode] = useState<Mode>('join')
   const [code, setCode] = useState('')
   const [groupName, setGroupName] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Message | null>(null)
   const [isBusy, setIsBusy] = useState(false)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const normalized = normalizeJoinCode(code)
     const problem =
-      validateDisplayName(displayName) ??
-      (mode === 'join' ? (normalized ? null : 'Join codes are 6 letters and numbers, e.g. K7Q3MZ.') : validateGroupName(groupName))
+      validateDisplayName(displayName) ?? (mode === 'join' ? (normalized ? null : msg('groups.errorCode')) : validateGroupName(groupName))
     if (problem) return setError(problem)
     setError(null)
     setIsBusy(true)
@@ -35,21 +37,21 @@ export function GroupForms({ onDone }: GroupFormsProps) {
   }
 
   return (
-    <section className="mt-8 rounded-3xl bg-white/80 p-5 shadow-sm" aria-label="Join or create a group">
+    <section className="mt-8 rounded-3xl bg-white/80 p-5 shadow-sm" aria-label={t('groups.formLabel')}>
       <div className="grid grid-cols-2 gap-1 rounded-full bg-paper-deep p-1" role="tablist">
-        {(['join', 'create'] as const).map((m) => (
+        {(['join', 'create'] as const).map((option) => (
           <button
-            key={m}
+            key={option}
             type="button"
             role="tab"
-            aria-selected={mode === m}
+            aria-selected={mode === option}
             onClick={() => {
-              setMode(m)
+              setMode(option)
               setError(null)
             }}
-            className={`min-h-10 rounded-full text-sm font-semibold transition ${mode === m ? 'bg-white text-forest shadow-sm' : 'text-ink-soft'}`}
+            className={`min-h-10 rounded-full text-sm font-semibold transition ${mode === option ? 'bg-white text-forest shadow-sm' : 'text-ink-soft'}`}
           >
-            {m === 'join' ? 'Join a group' : 'Create a group'}
+            {option === 'join' ? t('groups.join') : t('groups.create')}
           </button>
         ))}
       </div>
@@ -57,7 +59,7 @@ export function GroupForms({ onDone }: GroupFormsProps) {
       <form onSubmit={handleSubmit} noValidate className="mt-4">
         {mode === 'join' ? (
           <label className="block text-sm font-semibold">
-            Join code
+            {t('groups.code')}
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -70,24 +72,24 @@ export function GroupForms({ onDone }: GroupFormsProps) {
           </label>
         ) : (
           <label className="block text-sm font-semibold">
-            Group name
-            <input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="e.g. Class 5 Amanah, Taman Desa residents" maxLength={60} className={inputClass} />
+            {t('groups.name')}
+            <input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder={t('groups.namePlaceholder')} maxLength={60} className={inputClass} />
           </label>
         )}
 
         <label className="mt-3 block text-sm font-semibold">
-          Your display name
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Aina T." maxLength={30} autoComplete="nickname" className={inputClass} />
+          {t('groups.displayName')}
+          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t('groups.displayPlaceholder')} maxLength={30} autoComplete="nickname" className={inputClass} />
         </label>
-        <p className="mt-1 text-xs text-ink-soft">Others in the group see this name and your totals, nothing else. A nickname is fine.</p>
+        <p className="mt-1 text-xs text-ink-soft">{t('groups.privacy')}</p>
 
         {error && (
           <p role="alert" className="mt-3 text-sm text-alert">
-            {error}
+            {m(error)}
           </p>
         )}
         <button type="submit" disabled={isBusy} className="mt-4 min-h-12 w-full rounded-full bg-forest px-6 font-semibold text-paper disabled:opacity-60">
-          {isBusy ? 'Please wait…' : mode === 'join' ? 'Join group' : 'Create group'}
+          {isBusy ? t('common.pleaseWait') : mode === 'join' ? t('groups.joinButton') : t('groups.createButton')}
         </button>
       </form>
     </section>

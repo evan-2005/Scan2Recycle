@@ -17,21 +17,24 @@ describe('validateCredentials', () => {
 
   it('reports both problems', () => {
     expect(validateCredentials('not-an-email', 'short')).toEqual({
-      email: 'Enter a valid email address.',
-      password: `Use at least ${MIN_PASSWORD_LENGTH} characters.`,
+      email: { key: 'error.email' },
+      password: { key: 'error.password', vars: { n: MIN_PASSWORD_LENGTH } },
     })
   })
 })
 
 describe('friendlyAuthError', () => {
   it.each([
-    ['A user with this email address has already been registered', /already has an account/],
-    ['Email address "x@y.z" not authorized', /Confirm email/],
-    ['email rate limit exceeded', /Too many attempts/],
-    ['Invalid login credentials', /Wrong email or password/],
-    ['Password should be at least 8 characters.', /Password should be/],
-    ['weird failure', /Something went wrong: weird failure/],
-  ])('explains %j', (message, expected) => {
-    expect(friendlyAuthError(message)).toMatch(expected)
+    ['A user with this email address has already been registered', 'error.emailExists'],
+    ['Email address "x@y.z" not authorized', 'error.emailNotAuthorized'],
+    ['email rate limit exceeded', 'error.rateLimit'],
+    ['Invalid login credentials', 'error.wrongLogin'],
+    ['Password should be at least 8 characters.', 'error.weakPassword'],
+  ])('explains %j', (message, key) => {
+    expect(friendlyAuthError(message).key).toBe(key)
+  })
+
+  it('keeps unknown errors as detail', () => {
+    expect(friendlyAuthError('weird failure')).toEqual({ key: 'error.generic', vars: { detail: 'weird failure' } })
   })
 })

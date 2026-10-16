@@ -3,12 +3,12 @@
  *
  *   npm run embed-labels
  *
- * Reads item labels from supabase/seed.sql and, if web/.env.local has Supabase keys, from the live
+ * Reads item labels from supabase/seed.sql + migrations and, if web/.env.local has Supabase keys, from the live
  * item_types table too, then writes web/public/label-embeddings.json. Re-run after adding items
  * (items missing from the file still work, but each phone then downloads the ~110 MB text model).
  */
 import { AutoTokenizer, SiglipTextModel } from '@huggingface/transformers'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DTYPE, EMBEDDINGS_FILE, MODEL_ID, PROMPT_TEMPLATES, TEXT_PADDING, type LabelEmbeddingsFile } from '../src/lib/classifier/model.ts'
@@ -17,12 +17,20 @@ import { averageEmbeddings, splitRows } from '../src/lib/classifier/similarity.t
 const webDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DECIMALS = 4
 
-function labelsFromSeed(): string[] {
-  const sql = readFileSync(join(webDir, '../supabase/seed.sql'), 'utf8')
-  const start = sql.indexOf('insert into public.item_types')
-  if (start < 0) throw new Error('No item_types insert found in seed.sql')
-  const block = sql.slice(start, sql.indexOf('on conflict', start))
-  return [...block.matchAll(/^\s*\('((?:[^']|'')+)',/gm)].map((m) => m[1].replaceAll("''", "'"))
+/** Labels from every `insert into public.item_types` block in seed.sql and the migrations. */
+function labelsFromSqlFiles(): string[] {
+  const supabaseDir = join(webDir, '../supabase')
+  const migrations = readdirSync(join(supabaseDir, 'migrations')).filter((f) => f.endsWith('.sql')).map((f) => join(supabaseDir, 'migrations', f))
+  const labels: string[] = []
+  for (const path of [join(supabaseDir, 'seed.sql'), ...migrations]) {
+    const sql = readFileSync(path, 'utf8')
+    for (let start = sql.indexOf('insert into public.item_types'); start >= 0; start = sql.indexOf('insert into public.item_types', start + 1)) {
+      const block = sql.slice(start, sql.indexOf('on conflict', start))
+      labels.push(...[...block.matchAll(/^\s*\('((?:[^']|'')+)',/gm)].map((m) => m[1].replaceAll("''", "'")))
+    }
+  }
+  if (labels.length === 0) throw new Error('No item_types inserts found in supabase/*.sql')
+  return labels
 }
 
 function readEnv(): Record<string, string> {
@@ -59,7 +67,7 @@ async function labelsFromDatabase(): Promise<string[]> {
   }
 }
 
-const labels = [...new Set([...labelsFromSeed(), ...(await labelsFromDatabase())])].sort()
+const labels = [...new Set([...labelsFromSqlFiles(), ...(await labelsFromDatabase())])].sort()
 console.log(`Embedding ${labels.length} labels with ${MODEL_ID} (${PROMPT_TEMPLATES.length} templates each)…`)
 
 const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID)

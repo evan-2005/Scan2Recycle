@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { BottomNav } from './components/BottomNav'
+import { LanguageSwitch } from './components/LanguageSwitch'
 import { DropOffPage } from './features/dropoff/DropOffPage'
 import { GroupsPage } from './features/groups/GroupsPage'
 import { HistoryPage } from './features/history/HistoryPage'
@@ -23,6 +24,9 @@ export default function App() {
   return (
     <>
       <main className="mx-auto max-w-md px-4 pb-28">
+        <div className="flex justify-end pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <LanguageSwitch />
+        </div>
         <Page />
       </main>
       <BottomNav current={route} />

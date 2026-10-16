@@ -1,8 +1,9 @@
-import type { MaterialId } from '../types'
+import { msg, type Message } from '../i18n/translate'
+import type { ItemType, MaterialId } from '../types'
 import { ensureSession } from './auth'
 import { supabase } from './supabase'
 
-export type Result<T> = { ok: true; value: T } | { ok: false; error: string }
+export type Result<T> = { ok: true; value: T } | { ok: false; error: Message }
 
 export interface NewLog {
   itemTypeId: number | null
@@ -19,7 +20,7 @@ export interface HistoryEntry {
   weight_g: number | null
   created_at: string
   was_corrected: boolean
-  item_types: { display_name: string } | null
+  item_types: Pick<ItemType, 'display_name' | 'display_name_ms'> | null
 }
 
 /** Enough rows for a school-project lifetime of scans; totals are computed from these. */
@@ -41,7 +42,7 @@ export function saveLog(log: NewLog): Promise<Result<null>> {
       ai_score: log.aiScore === null ? null : Math.round(log.aiScore * 10000) / 10000,
       was_corrected: log.wasCorrected,
     })
-    return error ? { ok: false, error: `Could not save: ${error.message}` } : { ok: true, value: null }
+    return error ? { ok: false, error: msg('error.saveFailed', { detail: error.message }) } : { ok: true, value: null }
   })
 }
 
@@ -50,10 +51,10 @@ export function fetchHistory(): Promise<Result<HistoryEntry[]>> {
   return withSession(async () => {
     const { data, error } = await supabase!
       .from('recycling_logs')
-      .select('id, material_id, weight_g, created_at, was_corrected, item_types(display_name)')
+      .select('id, material_id, weight_g, created_at, was_corrected, item_types(*)')
       .order('created_at', { ascending: false })
       .limit(HISTORY_LIMIT)
-    if (error) return { ok: false, error: `Could not load your recycling: ${error.message}` }
+    if (error) return { ok: false, error: msg('error.loadFailed', { detail: error.message }) }
     const rows = (data ?? []) as unknown as HistoryEntry[]
     // PostgREST returns numeric columns as numbers; normalise anything that comes back as a string.
     return { ok: true, value: rows.map((row) => ({ ...row, weight_g: row.weight_g === null ? null : Number(row.weight_g) })) }
@@ -63,6 +64,6 @@ export function fetchHistory(): Promise<Result<HistoryEntry[]>> {
 export function deleteLog(id: string): Promise<Result<null>> {
   return withSession(async () => {
     const { error } = await supabase!.from('recycling_logs').delete().eq('id', id)
-    return error ? { ok: false, error: `Could not delete: ${error.message}` } : { ok: true, value: null }
+    return error ? { ok: false, error: msg('error.deleteFailed', { detail: error.message }) } : { ok: true, value: null }
   })
 }

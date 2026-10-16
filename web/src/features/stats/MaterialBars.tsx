@@ -1,3 +1,5 @@
+import { useI18n } from '../../i18n/context'
+import { materialName } from '../../i18n/localize'
 import { formatWeight, type MaterialTotal } from '../../lib/totals'
 
 interface MaterialBarsProps {
@@ -10,20 +12,21 @@ interface MaterialBarsProps {
  * carries its name and value as text, and an outline so pale fills still have an edge.
  */
 export function MaterialBars({ rows }: MaterialBarsProps) {
+  const { t, n, lang } = useI18n()
   const maxKg = Math.max(...rows.map((r) => r.kg), 0)
 
   return (
-    <ul className="flex flex-col gap-4" aria-label="Recycling by material">
+    <ul className="flex flex-col gap-4" aria-label={t('stats.barsLabel')}>
       {rows.map(({ material, items, kg }) => {
         const share = maxKg > 0 ? kg / maxKg : 0
         return (
           <li key={material.id}>
             <div className="flex items-baseline justify-between gap-3">
-              <span className="font-semibold">{material.display_name}</span>
+              <span className="font-semibold">{materialName(material, lang)}</span>
               <span className="text-sm tabular-nums text-ink-soft">
                 <strong className="font-display text-lg font-semibold text-ink">{formatWeight(kg)}</strong>
                 {' · '}
-                {items} {items === 1 ? 'item' : 'items'}
+                {n('common.items', items)}
               </span>
             </div>
             <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-paper-deep" aria-hidden="true">

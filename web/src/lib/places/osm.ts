@@ -92,6 +92,7 @@ export function parseOverpass(json: unknown): DropOffPoint[] {
       lng,
       source: 'osm',
       isPending: false,
+      isMine: false,
     }
     return [point]
   })

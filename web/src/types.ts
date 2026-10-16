@@ -1,4 +1,4 @@
-/** Mirrors the tables in supabase/migrations/001_init.sql. */
+/** Mirrors the tables in supabase/migrations (001_init.sql, plus the Malay columns from 005). */
 
 export type MaterialId = 'plastic' | 'paper' | 'metal' | 'glass' | 'organic' | 'e-waste' | 'general'
 
@@ -9,6 +9,9 @@ export interface Material {
   bin_colour: string
   is_recyclable: boolean
   sort_order: number
+  /** Malay names (005_languages_hubs.sql). Missing on older databases; the app then shows English. */
+  display_name_ms?: string | null
+  bin_name_ms?: string | null
 }
 
 export interface ItemType {
@@ -19,6 +22,10 @@ export interface ItemType {
   recyclable: boolean
   typical_weight_g: number | null
   tip: string | null
+  display_name_ms?: string | null
+  tip_ms?: string | null
+  /** false = searchable but left out of the camera AI's labels. Missing means true. */
+  in_ai?: boolean
 }
 
 export interface RecyclingLog {
