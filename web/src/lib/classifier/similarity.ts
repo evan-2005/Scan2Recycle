@@ -3,8 +3,8 @@ export interface LabelScore {
   score: number
 }
 
-/** CLIP's learned temperature (exp(4.6052) ≈ 100), applied to cosine similarities before softmax. */
-export const CLIP_LOGIT_SCALE = 100
+/** Default temperature applied to cosine similarities before softmax (CLIP's learned value is ≈ 100). */
+export const DEFAULT_LOGIT_SCALE = 100
 
 export function normalize(vector: ArrayLike<number>): Float32Array {
   let sumSquares = 0
@@ -47,6 +47,18 @@ export function averageEmbeddings(perTemplate: readonly (readonly Float32Array[]
   })
 }
 
+/** Turns a precomputed-embeddings file into normalised vectors, or an empty map if it is for another model. */
+export function parseEmbeddings(
+  file: { model?: unknown; embeddings?: unknown },
+  expectedModel: string,
+): Map<string, Float32Array> {
+  if (file.model !== expectedModel || typeof file.embeddings !== 'object' || file.embeddings === null) return new Map()
+  const entries = Object.entries(file.embeddings as Record<string, unknown>).filter(
+    (entry): entry is [string, number[]] => Array.isArray(entry[1]) && entry[1].every((x) => typeof x === 'number'),
+  )
+  return new Map(entries.map(([label, vector]) => [label, normalize(vector)]))
+}
+
 /**
  * Same maths as CLIP zero-shot classification: cosine similarity between the image and each
  * label embedding, scaled, then softmax. `labelEmbeds` must already be normalised.
@@ -55,12 +67,13 @@ export function rankLabels(
   imageEmbed: ArrayLike<number>,
   labelEmbeds: readonly Float32Array[],
   labels: readonly string[],
+  logitScale: number = DEFAULT_LOGIT_SCALE,
 ): LabelScore[] {
   if (labelEmbeds.length !== labels.length) {
     throw new Error(`Got ${labelEmbeds.length} label embeddings for ${labels.length} labels.`)
   }
   const image = normalize(imageEmbed)
-  const probabilities = softmax(labelEmbeds.map((text) => CLIP_LOGIT_SCALE * dot(image, text)))
+  const probabilities = softmax(labelEmbeds.map((text) => logitScale * dot(image, text)))
   return labels
     .map((label, i) => ({ label, score: probabilities[i] }))
     .sort((a, b) => b.score - a.score)

@@ -1,20 +1,31 @@
+import type { ScoredItem } from '../../lib/classifier/decide'
 import { disposalFor } from '../../lib/disposal'
 import type { Material } from '../../types'
 import { PhotoHeader } from './PhotoHeader'
+import { SaveForm } from './SaveForm'
 import type { Answer } from './scanState'
 
 interface ResultCardProps {
   photoUrl: string
   answer: Answer
+  /** The AI's top guess for this photo, kept so we can tell later how often users had to correct it. */
+  aiGuess: ScoredItem | null
   materials: readonly Material[]
   onChange: () => void
   onDone: () => void
 }
 
-export function ResultCard({ photoUrl, answer, materials, onChange, onDone }: ResultCardProps) {
+export function ResultCard({ photoUrl, answer, aiGuess, materials, onChange, onDone }: ResultCardProps) {
   const { item, material, score } = answer
   const disposal = disposalFor(item, material, materials)
   const verb = disposal.recyclable ? 'Place in' : 'Put in'
+  const log = {
+    itemTypeId: item?.id ?? null,
+    materialId: material.id,
+    aiLabel: aiGuess?.item.label ?? null,
+    aiScore: aiGuess?.score ?? null,
+    wasCorrected: score === null,
+  }
 
   return (
     <div className="pt-8">
@@ -44,7 +55,17 @@ export function ResultCard({ photoUrl, answer, materials, onChange, onDone }: Re
 
       {score !== null && <p className="mt-4 text-xs text-ink-soft">AI confidence: {Math.round(score * 100)}%</p>}
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-6">
+        {disposal.recyclable ? (
+          <SaveForm log={log} typicalWeightG={item?.typical_weight_g ?? null} />
+        ) : (
+          <p className="rounded-2xl bg-paper-deep/70 p-4 text-sm text-ink-soft">
+            Not recyclable, so it doesn't count towards your recycling totals.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3">
         <button type="button" onClick={onDone} className="min-h-12 rounded-full bg-forest px-6 font-semibold text-paper shadow-md active:scale-[0.98]">
           Scan another item
         </button>
@@ -52,7 +73,6 @@ export function ResultCard({ photoUrl, answer, materials, onChange, onDone }: Re
           Not right? Change it
         </button>
       </div>
-      <p className="mt-4 text-center text-xs text-ink-soft">Saving to My Recycling (with weight) arrives in Phase 2.</p>
     </div>
   )
 }

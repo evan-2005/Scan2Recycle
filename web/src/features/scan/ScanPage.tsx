@@ -24,13 +24,22 @@ export function ScanPage() {
         <ResultCard
           photoUrl={state.photoUrl}
           answer={state.answer}
+          aiGuess={state.options[0] ?? null}
           materials={ready?.materials ?? []}
           onChange={flow.change}
           onDone={flow.reset}
         />
       )
     case 'choose':
-      return <ChoicePicker photoUrl={state.photoUrl} options={state.options} onPick={flow.pickItem} onNone={flow.noneOfThese} />
+      return (
+        <ChoicePicker
+          photoUrl={state.photoUrl}
+          options={state.options}
+          materials={ready?.materialsById ?? new Map()}
+          onPick={flow.pickItem}
+          onNone={flow.noneOfThese}
+        />
+      )
     case 'pick-material':
       return <MaterialPicker photoUrl={state.photoUrl} materials={ready?.materials ?? []} onPick={flow.pickMaterial} />
     case 'error':

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate-pwa-assets": "pwa-assets-generator"
+    "generate-pwa-assets": "pwa-assets-generator",
+    "embed-labels": "node scripts/embed-labels.mts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.1",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { averageEmbeddings, normalize, rankLabels, softmax, splitRows } from './similarity'
+import { averageEmbeddings, normalize, parseEmbeddings, rankLabels, softmax, splitRows } from './similarity'
 
 function expectClose(actual: ArrayLike<number>, expected: number[]) {
   expect(actual.length).toBe(expected.length)
@@ -51,6 +51,24 @@ describe('averageEmbeddings', () => {
 
   it('returns an empty list when there are no templates', () => {
     expect(averageEmbeddings([])).toEqual([])
+  })
+})
+
+describe('parseEmbeddings', () => {
+  it('reads and normalises vectors for the expected model', () => {
+    const map = parseEmbeddings({ model: 'm', embeddings: { 'a can': [3, 4] } }, 'm')
+    expectClose(map.get('a can')!, [0.6, 0.8])
+  })
+
+  it('ignores a file made for a different model', () => {
+    expect(parseEmbeddings({ model: 'other', embeddings: { 'a can': [1, 0] } }, 'm').size).toBe(0)
+  })
+
+  it('skips malformed entries and survives a malformed file', () => {
+    const map = parseEmbeddings({ model: 'm', embeddings: { good: [1, 0], bad: 'x', worse: [1, 'y'] } }, 'm')
+    expect([...map.keys()]).toEqual(['good'])
+    expect(parseEmbeddings({ model: 'm', embeddings: null }, 'm').size).toBe(0)
+    expect(parseEmbeddings({}, 'm').size).toBe(0)
   })
 })
 

@@ -57,7 +57,7 @@ function handleMessage(message: WorkerResponse): void {
 
 function getWorker(): Worker {
   if (!worker) {
-    worker = new Worker(new URL('./clip.worker.ts', import.meta.url), { type: 'module' })
+    worker = new Worker(new URL('./classifier.worker.ts', import.meta.url), { type: 'module' })
     worker.addEventListener('message', (event: MessageEvent<WorkerResponse>) => handleMessage(event.data))
     worker.addEventListener('error', (event) => {
       failEverything(new Error(event.message || 'The AI worker crashed.'))

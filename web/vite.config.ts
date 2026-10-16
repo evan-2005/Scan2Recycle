@@ -14,6 +14,7 @@ export default defineConfig({
       workbox: {
         // The ONNX runtime (~27 MB) is too big to precache on install. Cache it the first time a scan needs it.
         // (The CLIP model files are cached separately by Transformers.js.)
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'], // json = precomputed label embeddings
         globIgnores: ['**/*.wasm'],
         runtimeCaching: [
           {

@@ -63,7 +63,7 @@ export function ScanStart({ catalog, onPhoto }: ScanStartProps) {
       {catalog.status === 'error' && <p className="mt-2 text-sm text-alert">{catalog.message}</p>}
 
       <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-        The AI runs on your phone, so your photo never leaves it. The first scan downloads the AI model (about 150 MB, once), so use Wi-Fi if you can.
+        The AI runs on your phone, so your photo never leaves it. The first scan downloads the AI model (about 100 MB, once), so use Wi-Fi if you can.
       </p>
     </div>
   )

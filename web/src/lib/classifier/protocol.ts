@@ -1,6 +1,6 @@
 import type { LabelScore } from './similarity'
 
-/** Messages between the app and clip.worker.ts. */
+/** Messages between the app and classifier.worker.ts. */
 export type WorkerRequest =
   | { type: 'prepare'; labels: string[] }
   | { type: 'classify'; id: number; image: Blob }
