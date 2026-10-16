@@ -1,3 +1,5 @@
+// Must load first: it captures the email-link hash before supabase-js reads and clears it.
+import './lib/authReturn'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

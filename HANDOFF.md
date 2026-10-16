@@ -47,7 +47,7 @@ Phone browser (React PWA)
 
 1. **Two Supabase projects exist.** The app uses **`bvqctjqhcsuevcgzhyou`**. SQL run in the other project does nothing to the app (this caused hours of confusion). In the SQL Editor, check that the browser URL contains `bvqctjqhcsuevcgzhyou` first.
 2. **The SQL Editor applies a file all-or-nothing.** If a run "did nothing", check for a red error, or the "destructive operation" pop-up being cancelled.
-3. **Supabase's built-in email** only sends to the project's own organisation members, at 2 per hour. "Save my progress" therefore uses email + **password** with **"Confirm email" turned off** (Authentication → Sign In / Providers → Email). For real email confirmations, set up custom SMTP (e.g. Resend or Brevo).
+3. **Emails need custom SMTP.** Supabase's built-in email only sends to the project's own organisation members, at 2 per hour. The app supports confirmation and password-reset emails (`lib/account.ts`, `lib/authReturn.ts`, `features/account/`). Turn them on with Brevo SMTP plus "Confirm email" on; see README → "Verification and password-reset emails". Email links return as `/?auth=confirmed` or `/?auth=reset`, and the app reads the URL hash before supabase-js clears it. Those return URLs must be in Supabase's Redirect URLs list.
 4. **The free Overpass servers are unreliable.** They time out, rate-limit (the browser then sees "Failed to fetch") or return 500 or 406. The app copes like this:
    - it tries the `overpass.private.coffee` mirror first, then `overpass-api.de`
    - it searches 8 km, and widens to 60 km only if fewer than 3 points turn up

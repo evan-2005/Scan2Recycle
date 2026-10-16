@@ -41,6 +41,24 @@ The **service_role / secret** key must never go in the web app.
 > **Bins:** set to Malaysia's 3-colour public bins (blue paper, orange plastic & metal, brown glass). Edit them in
 > **Table Editor → materials** if your area differs.
 
+### Verification and password-reset emails
+Supabase's built-in email only reaches your own Supabase organisation's addresses (2 an hour), so real users need a
+free email service. Brevo's free plan sends 300 emails a day.
+1. **Brevo** (<https://www.brevo.com>): sign up, verify a sender email address (**Senders, domains & IPs → Senders**),
+   then **SMTP & API → SMTP** and generate an **SMTP key**. Note the login shown there.
+2. **Supabase → Authentication → Emails → SMTP Settings**: enable custom SMTP, then fill in
+   host `smtp-relay.brevo.com`, port `587`, username = the Brevo SMTP login, password = the SMTP key,
+   sender email = the address you verified in Brevo, sender name `Scan2Recycle`.
+3. **Supabase → Authentication → URL Configuration**: Site URL `https://scan2-recycle.vercel.app`; add Redirect URLs
+   `https://scan2-recycle.vercel.app/**` and `http://localhost:5173/**`.
+4. **Supabase → Authentication → Sign In / Providers → Email**: turn **"Confirm email" on**.
+5. Optional: **Authentication → Emails → Templates** to reword the "Confirm email change" and "Reset password" emails
+   (e.g. in English and Malay).
+
+How it works in the app: "Save my progress" sends a confirmation link → the user opens it → the app shows
+"Email confirmed, now set a password" → done. "Forgot password?" sends a reset link → the app shows "Set a new password".
+With "Confirm email" off, no email is sent and the account is created immediately.
+
 ### Running the drop-off map
 - Points come from **OpenStreetMap** (live search plus a bundled snapshot of all Malaysian points, `public/osm-points-my.json`)
   and **community hubs** that anyone can add in the app (`recycling_points`). Added hubs show immediately; people can

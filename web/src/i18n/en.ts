@@ -142,7 +142,7 @@ export const en = {
   'account.signOut': 'Sign out',
   'account.signOutConfirm': 'Sign out on this device? Your saved items stay in your account.',
   'account.pending': 'Waiting for you to confirm {email}. Open the link in that email, then reload this page.',
-  'account.checkInbox': 'Check {email} for a confirmation link, then come back here to set your password.',
+  'account.checkInbox': 'We sent a confirmation link to {email}. Open it (check your spam folder too), then come back here to set your password.',
   'account.saveIntro':
     'Your scans are saved on this browser only. Add an email and password to keep them safe and see them on other phones.',
   'account.saveButton': 'Save my progress',
@@ -151,6 +151,21 @@ export const en = {
   'account.signInNote': 'Items saved on this browser so far stay with this browser.',
   'account.signIn': 'Sign in',
   'account.backToSave': 'Back to “Save my progress”',
+  'account.checkInboxTitle': 'Check your email',
+  'account.resend': 'Send the email again',
+  'account.resent': '✓ Sent again. Check your inbox and spam folder.',
+  'account.refresh': 'I’ve confirmed it',
+  'account.stillPending': 'Not confirmed yet. Open the link in the email first.',
+  'account.confirmedNotice': '✓ Email confirmed! Now set a password so you can sign in on other phones.',
+  'account.setPasswordTitle': 'Set a password',
+  'account.setPasswordIntro': 'Use it with {email} to sign in on any phone.',
+  'account.forgot': 'Forgot password?',
+  'account.resetIntro': 'Enter your email and we’ll send you a link to set a new password.',
+  'account.sendReset': 'Send reset link',
+  'account.resetSent': '✓ If {email} has an account, a reset link is on its way. Check spam too.',
+  'account.resetTitle': 'Set a new password',
+  'account.resetDone': '✓ Password changed. You’re signed in.',
+  'account.linkExpired': 'That link has expired or was already used. Ask for a new one below.',
   'account.email': 'Email',
   'account.password': 'Password',
 
@@ -305,6 +320,7 @@ export const en = {
     'Supabase can’t send email to that address. Ask the team to turn off “Confirm email” or set up an email service (README).',
   'error.rateLimit': 'Too many attempts. Wait a few minutes and try again.',
   'error.wrongLogin': 'Wrong email or password.',
+  'error.emailNotConfirmed': 'Confirm your email first: open the link we sent you.',
   'error.generic': 'Something went wrong: {detail}',
 } as const
 
