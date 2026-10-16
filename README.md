@@ -25,7 +25,8 @@ Open the URL it prints. The Scan page shows a **Setup check** card. It turns gre
 
 ### 2. Database (Supabase)
 1. Create a free project at <https://supabase.com>.
-2. **SQL Editor** → paste and run `supabase/migrations/001_init.sql`, then `supabase/seed.sql`.
+2. **SQL Editor** → paste and run `supabase/setup_all.sql` (everything in one file, safe to re-run). It ends by showing row counts: materials 7, item_types 34.
+   (Same result as running `migrations/001_init.sql`, `migrations/002_grants.sql` and `seed.sql` in order.)
 3. **Authentication → Sign In / Providers** → turn on **Allow anonymous sign-ins** (used in Phase 2).
 4. **Project Settings → API** → copy the Project URL and the `anon` public key.
 5. Copy `web/.env.example` to `web/.env.local` and paste them in. Restart `npm run dev`.
