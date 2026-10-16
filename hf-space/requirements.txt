@@ -1,0 +1,6 @@
+# Gradio itself is installed by Spaces from sdk_version in README.md.
+# CPU-only torch keeps the build small and fast on free hardware.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+transformers>=4.45,<6
+pillow
