@@ -4,12 +4,15 @@ interface NavItem {
   route: Route
   label: string
   icon: string
+  /** Other routes that should highlight this tab (e.g. History lives under My Recycling). */
+  also?: readonly Route[]
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
   { route: 'scan', label: 'Scan', icon: 'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
-  { route: 'stats', label: 'My Recycling', icon: 'M5 20V11M12 20V4M19 20v-6' },
-  { route: 'history', label: 'History', icon: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9' },
+  { route: 'dropoff', label: 'Drop-off', icon: 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6' },
+  { route: 'groups', label: 'Groups', icon: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8' },
+  { route: 'stats', label: 'My Recycling', icon: 'M5 20V11M12 20V4M19 20v-6', also: ['history'] },
 ]
 
 interface BottomNavProps {
@@ -24,7 +27,7 @@ export function BottomNav({ current }: BottomNavProps) {
     >
       <ul className="mx-auto flex max-w-md">
         {NAV_ITEMS.map((item) => {
-          const isActive = item.route === current
+          const isActive = item.route === current || (item.also?.includes(current) ?? false)
           return (
             <li key={item.route} className="flex-1">
               <a

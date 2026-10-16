@@ -2,7 +2,7 @@ import type { Material } from '../../types'
 import { PhotoHeader } from './PhotoHeader'
 
 interface MaterialPickerProps {
-  photoUrl: string
+  photoUrl: string | null
   materials: readonly Material[]
   onPick: (material: Material) => void
 }

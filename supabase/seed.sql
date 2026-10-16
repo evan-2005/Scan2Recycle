@@ -1,18 +1,16 @@
 -- Scan2Recycle seed data. Safe to re-run: existing rows are updated in place.
 --
--- !! BIN NAMES AND COLOURS ARE PLACEHOLDERS !!
--- They follow the "separate bin per material" style from the project brief.
--- Change bin_name / bin_colour to match the bins where the app will be used
--- (see PLAN.md section 13), e.g. Malaysia: blue = paper, orange = plastic & metal, brown = glass.
+-- Bins follow Malaysia's 3-colour public recycling bins: blue = paper, orange = plastic & metal,
+-- brown = glass. Check with your local council if your area differs.
 
 insert into public.materials (id, display_name, bin_name, bin_colour, is_recyclable, sort_order) values
-  ('plastic', 'Plastic',     'Plastic Recycling Bin', '#f28c28', true,  1),
-  ('paper',   'Paper',       'Paper Recycling Bin',   '#2f6fb5', true,  2),
-  ('metal',   'Metal',       'Metal Recycling Bin',   '#e6b800', true,  3),
-  ('glass',   'Glass',       'Glass Recycling Bin',   '#7a5230', true,  4),
-  ('organic', 'Food waste',  'Food Waste / General Waste', '#5b7d3a', false, 5),
-  ('e-waste', 'E-waste',     'E-waste Drop-off Point',     '#b3412e', false, 6),
-  ('general', 'General waste', 'General Waste Bin',        '#4a4a4a', false, 7)
+  ('plastic', 'Plastic',       'Orange recycling bin (plastic & metal)', '#f28c28', true,  1),
+  ('paper',   'Paper',         'Blue recycling bin (paper)',             '#2f6fb5', true,  2),
+  ('metal',   'Metal',         'Orange recycling bin (plastic & metal)', '#f28c28', true,  3),
+  ('glass',   'Glass',         'Brown recycling bin (glass)',            '#7a5230', true,  4),
+  ('organic', 'Food waste',    'Food waste / general waste bin',         '#5b7d3a', false, 5),
+  ('e-waste', 'E-waste',       'E-waste drop-off point',                 '#b3412e', false, 6),
+  ('general', 'General waste', 'General waste bin',                      '#4a4a4a', false, 7)
 on conflict (id) do update set
   display_name  = excluded.display_name,
   bin_name      = excluded.bin_name,

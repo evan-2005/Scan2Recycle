@@ -1,12 +1,15 @@
 import type { ScoredItem } from '../../lib/classifier/decide'
 import { disposalFor } from '../../lib/disposal'
+import { pointMaterialFor } from '../../lib/places/filter'
+import { routeHref } from '../../lib/routes'
 import type { Material } from '../../types'
 import { PhotoHeader } from './PhotoHeader'
 import { SaveForm } from './SaveForm'
 import type { Answer } from './scanState'
 
 interface ResultCardProps {
-  photoUrl: string
+  /** null when the answer came from search. */
+  photoUrl: string | null
   answer: Answer
   /** The AI's top guess for this photo, kept so we can tell later how often users had to correct it. */
   aiGuess: ScoredItem | null
@@ -15,21 +18,28 @@ interface ResultCardProps {
   onDone: () => void
 }
 
+const EYEBROWS: Readonly<Record<Answer['method'], string>> = {
+  ai: 'Detected',
+  picked: 'You picked',
+  search: 'Search result',
+}
+
 export function ResultCard({ photoUrl, answer, aiGuess, materials, onChange, onDone }: ResultCardProps) {
-  const { item, material, score } = answer
+  const { item, material, score, method } = answer
   const disposal = disposalFor(item, material, materials)
   const verb = disposal.recyclable ? 'Place in' : 'Put in'
+  const dropOffMaterial = pointMaterialFor(material.id)
   const log = {
     itemTypeId: item?.id ?? null,
     materialId: material.id,
-    aiLabel: aiGuess?.item.label ?? null,
-    aiScore: aiGuess?.score ?? null,
-    wasCorrected: score === null,
+    aiLabel: method === 'search' ? null : (aiGuess?.item.label ?? null),
+    aiScore: method === 'search' ? null : (aiGuess?.score ?? null),
+    wasCorrected: method === 'picked',
   }
 
   return (
     <div className="pt-8">
-      <PhotoHeader photoUrl={photoUrl} eyebrow={score !== null ? 'Detected' : 'You picked'}>
+      <PhotoHeader photoUrl={photoUrl} eyebrow={EYEBROWS[method]}>
         {item?.display_name ?? `${material.display_name} item`}
       </PhotoHeader>
 
@@ -53,6 +63,16 @@ export function ResultCard({ photoUrl, answer, aiGuess, materials, onChange, onD
 
       {item?.tip && <p className="mt-4 rounded-2xl border border-ink/10 p-4 text-sm leading-relaxed">💡 {item.tip}</p>}
 
+      {dropOffMaterial && (
+        <a
+          href={routeHref('dropoff', { material: dropOffMaterial })}
+          className="mt-3 flex min-h-12 items-center justify-between rounded-2xl bg-white px-4 font-semibold text-forest shadow-sm"
+        >
+          📍 Where can I drop this off?
+          <span aria-hidden="true">→</span>
+        </a>
+      )}
+
       {score !== null && <p className="mt-4 text-xs text-ink-soft">AI confidence: {Math.round(score * 100)}%</p>}
 
       <div className="mt-6">
@@ -67,7 +87,7 @@ export function ResultCard({ photoUrl, answer, aiGuess, materials, onChange, onD
 
       <div className="mt-6 flex flex-col gap-3">
         <button type="button" onClick={onDone} className="min-h-12 rounded-full bg-forest px-6 font-semibold text-paper shadow-md active:scale-[0.98]">
-          Scan another item
+          {photoUrl ? 'Scan another item' : 'Back'}
         </button>
         <button type="button" onClick={onChange} className="min-h-12 rounded-full px-6 font-semibold text-forest underline decoration-2 underline-offset-4">
           Not right? Change it

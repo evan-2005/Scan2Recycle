@@ -5,6 +5,7 @@ import { MaterialPicker } from './MaterialPicker'
 import { ResultCard } from './ResultCard'
 import { ScanStart } from './ScanStart'
 import { ScanWorking } from './ScanWorking'
+import { SearchBox } from './SearchBox'
 import { useCatalog } from './useCatalog'
 import { useScanFlow } from './useScanFlow'
 
@@ -66,9 +67,13 @@ export function ScanPage() {
             }
           />
           <ScanStart catalog={catalog} onPhoto={flow.start} />
-          <div className="mt-10">
-            <SetupStatus />
-          </div>
+          {ready && <SearchBox items={ready.itemTypes} materials={ready.materialsById} onPick={flow.showItem} />}
+          {/* The setup checklist only matters while something is misconfigured. */}
+          {catalog.status === 'error' && (
+            <div className="mt-10">
+              <SetupStatus />
+            </div>
+          )}
         </>
       )
   }

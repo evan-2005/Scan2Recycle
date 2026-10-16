@@ -9,6 +9,8 @@ import type { ReadyCatalog } from './useCatalog'
 export interface ScanFlow {
   state: ScanState
   start: (file: File) => void
+  /** Shows the answer for an item found with "Can I recycle…?" search. */
+  showItem: (item: ItemType) => void
   pickItem: (item: ItemType) => void
   pickMaterial: (material: Material) => void
   change: () => void
@@ -77,6 +79,17 @@ export function useScanFlow(catalog: ReadyCatalog | null): ScanFlow {
     [catalog],
   )
 
+  const showItem = useCallback(
+    (item: ItemType) => {
+      const material = catalog?.materialsById.get(item.material_id)
+      if (!material) return
+      runId.current++ // cancel any scan still in flight
+      releasePhoto()
+      dispatch({ type: 'searched', item, material })
+    },
+    [catalog, releasePhoto],
+  )
+
   const reset = useCallback(() => {
     runId.current++
     releasePhoto()
@@ -86,6 +99,7 @@ export function useScanFlow(catalog: ReadyCatalog | null): ScanFlow {
   return {
     state,
     start: (file) => void start(file),
+    showItem,
     pickItem,
     pickMaterial: (material) => dispatch({ type: 'material-picked', material }),
     change: () => dispatch({ type: 'change' }),

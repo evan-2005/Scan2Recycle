@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 
 export type SessionResult = { ok: true; userId: string } | { ok: false; error: string }
 
-let pending: Promise<SessionResult> | null = null
+let inFlight: Promise<SessionResult> | null = null
 
 async function signIn(): Promise<SessionResult> {
   if (!supabase) return { ok: false, error: 'Supabase is not configured (see web/.env.example).' }
@@ -26,11 +26,11 @@ async function signIn(): Promise<SessionResult> {
 /**
  * Makes sure this browser has a user, creating an anonymous one on first use.
  * The session is kept in localStorage, so the same person keeps their totals on this device.
+ * Concurrent callers share one sign-in; later calls re-check the (possibly changed) session.
  */
 export function ensureSession(): Promise<SessionResult> {
-  pending ??= signIn().then((result) => {
-    if (!result.ok) pending = null // let the next call retry
-    return result
+  inFlight ??= signIn().finally(() => {
+    inFlight = null
   })
-  return pending
+  return inFlight
 }

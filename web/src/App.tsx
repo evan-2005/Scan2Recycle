@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
 import { BottomNav } from './components/BottomNav'
+import { DropOffPage } from './features/dropoff/DropOffPage'
+import { GroupsPage } from './features/groups/GroupsPage'
 import { HistoryPage } from './features/history/HistoryPage'
 import { ScanPage } from './features/scan/ScanPage'
 import { MyRecyclingPage } from './features/stats/MyRecyclingPage'
@@ -8,6 +10,8 @@ import type { Route } from './lib/routes'
 
 const PAGES: Record<Route, ComponentType> = {
   scan: ScanPage,
+  dropoff: DropOffPage,
+  groups: GroupsPage,
   stats: MyRecyclingPage,
   history: HistoryPage,
 }

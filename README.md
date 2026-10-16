@@ -2,7 +2,7 @@
 
 Take a photo of an item → AI identifies it → the app tells you which bin it goes in → log the weight → track your recycling totals.
 
-The full plan is in [PLAN.md](PLAN.md). Built so far: setup, scan → AI → bin (Phase 1), and saving with weight, totals and history (Phase 2). Live at <https://scan2-recycle.vercel.app>.
+The full plan is in [PLAN.md](PLAN.md). Built so far: scan → AI → bin, "Can I recycle…?" search, saving with weight, totals, streaks and a weekly goal, history, a drop-off map of nearby recycling points, groups with a leaderboard, and email sign-in to keep progress. Live at <https://scan2-recycle.vercel.app>.
 
 ```
 supabase/   Database schema (migrations/) and starter data (seed.sql)
@@ -20,20 +20,30 @@ npm install
 npm run dev
 ```
 
-Open the URL it prints. The Scan page shows a **Setup check** card. It turns green as you finish the steps below.
+Open the URL it prints. If something isn't set up, the Scan page shows a **Setup check** card saying what's missing.
 
 ### 2. Database (Supabase)
 1. Create a free project at <https://supabase.com>.
 2. **SQL Editor** → paste and run `supabase/setup_all.sql` (everything in one file, safe to re-run). It ends by showing row counts: materials 7, item_types 50.
-   (Same result as running `migrations/001_init.sql`, `002_grants.sql`, `003_more_items.sql` and `seed.sql`.)
-   Already set up before the extra items were added? Just run `migrations/003_more_items.sql`.
+   (Same result as running `migrations/001_init.sql` … `004_features.sql` in order, plus `seed.sql`.)
+   Already set up earlier? Just run the newer files you haven't run yet: `003_more_items.sql`, `004_features.sql`.
 3. **Authentication → Sign In / Providers** → turn on **Allow anonymous sign-ins** (needed to save scans).
+   On the same page, under **Email**, turn **off "Confirm email"** so "Save my progress" works without an email service.
+   (Supabase's built-in email only sends to your own team's addresses, 2 per hour. To keep confirmations on, set up
+   custom SMTP, e.g. Resend or Brevo, under **Authentication → Emails → SMTP Settings**.)
 4. **Project Settings → API Keys** → copy the Project URL and the **publishable** key (`sb_publishable_…`).
 5. Copy `web/.env.example` to `web/.env.local` and paste them in. Restart `npm run dev`.
 
 The **service_role / secret** key must never go in the web app.
 
-> **Before demoing:** the bin names and colours in `seed.sql` are placeholders. Change them to match your local bins (PLAN.md §13), then re-run `seed.sql`.
+> **Bins:** set to Malaysia's 3-colour public bins (blue paper, orange plastic & metal, brown glass). Edit them in
+> **Table Editor → materials** if your area differs.
+
+### Running the drop-off map
+- Points come from **OpenStreetMap** plus the team's own list (`recycling_points`).
+- **Approving suggestions:** users can suggest points in the app. They stay hidden until someone ticks **approved** in
+  **Table Editor → recycling_points**. You can also add points there directly (set `approved` to true).
+- Map tiles are OpenStreetMap's free tiles, fine for a school project. For heavy use, switch to a keyed provider (see `MapView.tsx`).
 
 ### 3. AI (nothing to set up)
 The AI runs **on the phone** with [Transformers.js](https://huggingface.co/docs/transformers.js), Hugging Face's in-browser library.

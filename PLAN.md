@@ -398,12 +398,35 @@ Target: ≥ 80% unit-test coverage on `src/lib/`; ≥ 80% top-1 accuracy on the 
 
 ## 13. Decisions to make before Phase 0 ends
 
-1. **Which bin system?** The example uses "Metal Recycling Bin", but this depends on where it'll be used. Examples:
+1. ~~Which bin system?~~ Decided: Malaysia's 3-colour bins (§14). The example used "Metal Recycling Bin", but this depends on where it'll be used. Examples:
    - Malaysia (3-bin): blue = paper, orange = plastic & aluminium/metal, brown = glass
    - Singapore: one blue bin for all recyclables
    - School/community drive: whatever bins you physically set up
 
    Fill `materials.bin_name` / `bin_colour` to match.
-2. **Track non-recyclables too?** (Useful for awareness; must be excluded from "diverted" totals.)
-3. **Individual or group totals?** Group totals suit a community-service project; needs a `groups` table and leaderboard (stretch).
+2. ~~Track non-recyclables too?~~ Decided: no, only recyclables are saved.
+3. ~~Individual or group totals?~~ Decided: both. Groups were added (§14).
 4. **Deadline / demo date** → fix the phase dates in §9.
+
+---
+
+## 14. Features added after the first phone tests (Oct 2026)
+
+Decided with the team: Malaysia (KL/Selangor), all four recommended features, plus groups; drop-off points can be
+suggested by users and approved by the team.
+
+| Feature | What it does | Where |
+|---|---|---|
+| **Drop-off map** | Nearest recycling points from OpenStreetMap (Overpass API, with a backup server and a 24 h cache) plus the team's own list; filter by material; directions via Google Maps; "Where can I drop this off?" from a scan result | `features/dropoff/`, `lib/places/` |
+| **Suggest a point** | Tap the map to place a pin, pick materials, send. Hidden until the team approves it; max 10 a day per user | `SuggestPointForm.tsx`, `recycling_points` table |
+| **"Can I recycle…?" search** | Type an item (English or common Malay words: botol, tin, kertas, kotak, bateri…) instead of taking a photo | `lib/search.ts`, `SearchBox.tsx` |
+| **Streaks & weekly goal** | Days in a row with a saved item; this week's kg against a 0.5 / 1 / 2 / 5 kg goal (Monday-start weeks) | `lib/streaks.ts`, `StreakCard.tsx` |
+| **Save my progress** | Turns the anonymous account into email + password, so totals follow you to other phones and browsers | `lib/account.ts`, `AccountCard.tsx` |
+| **Groups & leaderboard** | Create a group, share its 6-character join code, see the group total and a ranking (last 7 days / all time) by display name | `features/groups/`, `lib/groups.ts` |
+| **Malaysian bins** | Blue paper, orange plastic & metal, brown glass | `004_features.sql` |
+
+Database: `supabase/migrations/004_features.sql` (also in `setup_all.sql`). Group changes go through database functions
+(`create_group`, `join_group`, `leave_group`, `group_leaderboard`) that check membership; members only ever see display
+names and totals. All rules were tested on a local Postgres with three simulated users.
+
+Privacy: the user's location is used only on the phone to sort the list; it is never saved or sent to Supabase.
