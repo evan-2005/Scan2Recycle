@@ -11,6 +11,18 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // The ONNX runtime (~27 MB) is too big to precache on install. Cache it the first time a scan needs it.
+        // (The CLIP model files are cached separately by Transformers.js.)
+        globIgnores: ['**/*.wasm'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.endsWith('.wasm'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'onnx-runtime', expiration: { maxEntries: 4 } },
+          },
+        ],
+      },
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Scan2Recycle',
@@ -29,6 +41,10 @@ export default defineConfig({
       },
     }),
   ],
+  worker: {
+    // The CLIP worker imports Transformers.js, which needs ES-module workers.
+    format: 'es',
+  },
   server: {
     // Lets a phone on the same Wi-Fi open the dev server via your PC's IP.
     host: true,

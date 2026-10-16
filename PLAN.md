@@ -36,25 +36,28 @@ Snap a photo of an item → AI says what it is, what material it is, and which b
 ## 2. Architecture
 
 ```
- ┌──────────────────────────┐
- │  Phone browser / PWA     │   React + Vite, installable to home screen
- │  (camera, UI, charts)    │
- └─────┬──────────────┬─────┘
-       │ image        │ save / read logs
-       ▼              ▼
- ┌──────────────┐  ┌──────────────────────────┐
- │ Hugging Face │  │ Supabase                 │
- │ Space        │  │  • Postgres database     │
- │ (Gradio +    │  │  • Auth (anonymous/email)│
- │  CLIP model) │  │  • Row Level Security    │
- └──────────────┘  └──────────────────────────┘
+ ┌───────────────────────────────────────────┐
+ │  Phone browser / PWA (React + Vite)       │
+ │                                           │
+ │  UI thread ──photo──► Web Worker          │
+ │                       CLIP (Transformers.js)
+ │                       runs ON the phone   │
+ └──────┬──────────────────────┬─────────────┘
+        │ first scan only:     │ item list, save / read logs
+        │ download model       ▼
+        ▼               ┌──────────────────────────┐
+ ┌──────────────────┐   │ Supabase                 │
+ │ Hugging Face Hub │   │  • Postgres database     │
+ │ (model files,    │   │  • Auth (anonymous/email)│
+ │  ~150 MB, cached)│   │  • Row Level Security    │
+ └──────────────────┘   └──────────────────────────┘
 ```
 
-**No custom backend server.** The app talks to two hosted services directly:
-- **Hugging Face Space** — runs the image model, free CPU hardware, public endpoint, no API token in the app.
-- **Supabase** — database + login. Row Level Security means each user can only read/write their own rows, so the public "anon key" is safe in the app.
+**No backend server and no AI server.** The app talks to two hosted services directly:
+- **Hugging Face Hub**: only serves the model files once. After that the browser caches them, and the AI runs entirely on the phone.
+- **Supabase**: database and login. Row Level Security means each user can only read and write their own rows, so the publishable key is safe in the app.
 
-This keeps the team on one codebase (the frontend) plus one small Python file (the Space).
+> **Change (Oct 2026):** the original plan ran CLIP in a Hugging Face *Space*. Hugging Face now requires a paid plan to create Gradio/Docker Spaces, so the model moved onto the phone (option C below). Side benefits: no cold starts, no rate limits, and photos never leave the device.
 
 ---
 
@@ -62,109 +65,87 @@ This keeps the team on one codebase (the frontend) plus one small Python file (t
 
 | Layer | Choice | Why |
 |-------|--------|-----|
-| App | **React + Vite + TypeScript**, built as a **PWA** | One codebase runs on iPhone, Android and laptop. Load on someone's phone by sending a link — no app store. |
+| App | **React + Vite + TypeScript**, built as a **PWA** | One codebase runs on iPhone, Android and laptop. Load on someone's phone by sending a link; no app store. |
 | Styling | Tailwind CSS | Fast to build mobile layouts |
-| Charts | Recharts | Simple bar chart for per-material totals |
-| AI | **Hugging Face Space** (Gradio) running `openai/clip-vit-base-patch32` zero-shot classification | Free, uses Hugging Face, no credit limit, works with any list of item labels |
-| AI client | `@gradio/client` (npm) | Official JS client for calling a Space |
+| Charts | Recharts | Simple bar chart for per-material totals (Phase 2) |
+| AI | **Transformers.js** (`@huggingface/transformers`) running `Xenova/clip-vit-base-patch32`, 8-bit quantised | Hugging Face's own library. Free, offline after first load, private |
+| AI runtime | ONNX Runtime Web (WASM) inside a **Web Worker** | Keeps the UI smooth while the model runs |
 | Database | **Supabase** (Postgres) free tier | Real SQL database, built-in auth, generous free tier |
-| Hosting | Vercel or Netlify (free) | HTTPS URL is required for the phone camera + PWA install |
+| Hosting | Vercel or Netlify (free) | HTTPS URL is required for the phone camera and PWA install |
 | Tests | Vitest (unit), Playwright (end-to-end) | |
 
-### Why a Hugging Face *Space* instead of the Inference API?
-Hugging Face's serverless "Inference Providers" API gives free accounts only about **$0.10/month of credits** (PRO is $9/mo for $2 of credits). A class demo with dozens of scans could burn through that. A Space you host yourself on free CPU hardware has no per-call cost.
+### AI options considered
 
-| Option | Cost | Setup | Accuracy | Verdict |
-|--------|------|-------|----------|---------|
-| **A. Own HF Space + CLIP zero-shot** | Free | Medium (1 Python file) | Good for common items | **Primary** |
-| B. HF Inference Providers + vision-language model (e.g. Qwen2.5-VL) returning JSON | ~$0.10/mo free, then paid | Easy | Best (can describe anything) | Backup / upgrade if you get credits |
-| C. On-device with Transformers.js (CLIP in the browser) | Free, works offline | Medium | Same as A, slower first load (~150 MB model download) | Stretch: offline mode |
+| Option | Cost | Status |
+|--------|------|--------|
+| A. Own HF Space + CLIP (Gradio) | Needs a paid HF plan since 2026 | Dropped |
+| B. HF Inference Providers API + vision-language model | ~$0.10/month free credit, then paid; needs a server (e.g. Supabase Edge Function) to hide the token | Possible upgrade later if accuracy needs it |
+| **C. CLIP on the phone with Transformers.js** | Free | **In use** |
 
-Free Spaces **go to sleep after ~48 h of no use** and take ~30–60 s to wake. Open the Space page a few minutes before any demo.
+Costs of option C: a one-time ~150 MB download on the first scan (warn users to use Wi-Fi), and slower scans on old phones (expect roughly 0.5–2 s per photo).
 
 ---
 
 ## 4. AI identification design
 
 ### 4.1 How it works
-CLIP compares the photo against a list of text labels and returns a score for each. We give it a curated list of everyday items, each mapped to a material.
+CLIP turns a photo and a sentence into vectors, and similar things end up close together. We compare the photo against one sentence per item and pick the closest.
 
 ```
-photo ──► CLIP ──► "a photo of an aluminium drink can"  0.81
-                   "a photo of a tin food can"          0.09
-                   "a photo of a plastic bottle"        0.04 ...
-         top label ──► lookup table ──► { item, material, recyclable, bin }
+first scan:  download model → embed every item label once (text model) → keep in memory
+each scan:   photo → shrink to 512 px → vision model → compare with label vectors → softmax
+             top label ──► item_types row ──► { item, material, recyclable, bin }
 ```
+
+Each label is embedded with three phrasings and averaged ("prompt ensembling"): `a photo of {}`, `a close-up photo of {}`, `a photo of {}, a piece of rubbish`.
 
 ### 4.2 Label → material table (lives in the database, `item_types`)
-Start with ~30–40 items. Example rows:
+The 34 starter items are in `supabase/seed.sql`. Example rows:
 
 | label (prompt text) | display name | material | recyclable | note |
 |---|---|---|---|---|
 | an aluminium drink can | Aluminium Can | metal | yes | Rinse first |
-| a tin food can | Tin Can | metal | yes | Rinse first |
-| a plastic water bottle | Plastic Bottle | plastic | yes | Remove cap if required locally |
-| a plastic food container | Plastic Container | plastic | yes | Must be clean |
-| a plastic bag | Plastic Bag | plastic | no* | *Often not accepted in bins — check locally |
-| a styrofoam box | Styrofoam | plastic | no | |
-| a cardboard box | Cardboard | paper | yes | Flatten |
-| a newspaper | Newspaper | paper | yes | |
-| a paper cup | Paper Cup | paper | no | Plastic lining |
+| a plastic water bottle | Plastic Bottle | plastic | yes | Check if caps are accepted |
+| a plastic shopping bag | Plastic Bag | plastic | no | Usually not accepted in bins |
+| a cardboard box | Cardboard Box | paper | yes | Flatten |
 | a greasy pizza box | Greasy Pizza Box | paper | no | Food contamination |
 | a glass bottle | Glass Bottle | glass | yes | |
-| a glass jar | Glass Jar | glass | yes | |
-| a banana peel | Food Waste | organic | no | General / food waste |
 | a battery | Battery | e-waste | no | Special e-waste drop-off |
 
-Because the table is in the database, the team can add items without redeploying the AI.
+Because the table is in the database, the team can add items without changing code. The app re-embeds the labels whenever the list changes.
 
-### 4.3 Confidence rules
+An item can be made of a recyclable material but still not be recyclable (paper cup, greasy pizza box). Those are sent to the **general** waste bin (`web/src/lib/disposal.ts`).
+
+### 4.3 Confidence rules and measured accuracy
+Measured on 145 photos from the TrashNet dataset (25 each of cardboard, paper, glass, metal and plastic, plus 20 general rubbish), using the same pipeline as the app:
+
+| | Result |
+|---|---|
+| Right material as the top guess | **64%** |
+| Right material in the top 3 | **93%** |
+| Top score ≥ 0.6 → right | 93% of those photos |
+| Weakest classes | glass (often confused with bottle caps or plastic bottles), general rubbish |
+
+So the app rarely trusts a single guess and leans on a quick tap from the user:
+
 | Top score | App behaviour |
 |-----------|---------------|
-| ≥ 0.60 | Show result normally |
-| 0.30 – 0.60 | Show top 3 guesses as buttons: "Is it one of these?" |
-| < 0.30 | "Not sure — pick the material" (manual buttons) |
+| ≥ 0.6 | Show the answer, with "Not right? Change it" |
+| 0.1 – 0.6 | "Is it one of these?" with the top 3, plus "None of these" |
+| < 0.1 | "What is it made of?" material picker |
 
-Thresholds are constants in one file; tune them during testing (§11).
+Thresholds are in `web/src/lib/classifier/decide.ts`. TrashNet photos are on a plain white background, so **re-measure with your own phone photos** (§11) and tune the label list and thresholds.
 
-### 4.4 Hugging Face Space code (`hf-space/app.py`)
-```python
-import gradio as gr
-from transformers import pipeline
+Ways to improve accuracy later: better label wording (e.g. "a green glass bottle" and "a clear glass bottle"), fewer look-alike labels, a bigger CLIP model (`clip-vit-base-patch16`, slower), or option B.
 
-clf = pipeline("zero-shot-image-classification",
-               model="openai/clip-vit-base-patch32")
-
-def predict(image, labels_csv):
-    labels = [l.strip() for l in labels_csv.split("|") if l.strip()]
-    prompts = [f"a photo of {l}" for l in labels]
-    results = clf(image, candidate_labels=prompts)
-    return [{"label": r["label"].removeprefix("a photo of "),
-             "score": round(r["score"], 4)} for r in results[:5]]
-
-gr.Interface(fn=predict,
-             inputs=[gr.Image(type="pil"), gr.Textbox()],
-             outputs=gr.JSON(),
-             api_name="predict").launch()
-```
-`requirements.txt`: `transformers`, `torch`, `gradio`, `pillow`.
-
-The app sends the label list with each request (pulled from `item_types`), so the model never needs editing.
-
-### 4.5 Calling it from the app (`src/lib/classify.ts`)
-```ts
-import { Client } from "@gradio/client";
-
-export async function classify(image: Blob, labels: string[]) {
-  const app = await Client.connect(import.meta.env.VITE_HF_SPACE_ID);
-  const res = await app.predict("/predict", {
-    image,
-    labels_csv: labels.join("|"),
-  });
-  return res.data[0] as { label: string; score: number }[];
-}
-```
-Before sending: resize the photo to max 512 px on the long side (faster upload, CLIP only uses 224 px anyway) and reject non-image files / files > 10 MB.
+### 4.4 Code
+| File | Job |
+|------|-----|
+| `web/src/lib/classifier/clip.worker.ts` | Loads tokenizer, text and vision models; embeds labels once; classifies photos |
+| `web/src/lib/classifier/client.ts` | `prepareClassifier(labels, onProgress)` and `classifyImage(blob)` for the UI |
+| `web/src/lib/classifier/similarity.ts` | Cosine similarity, softmax, prompt ensembling (pure, unit-tested) |
+| `web/src/lib/classifier/decide.ts` | Scores → confident / choose / unknown (pure, unit-tested) |
+| `web/src/lib/image.ts` | Validates and shrinks the photo before it goes to the model |
 
 ---
 
@@ -234,7 +215,7 @@ create policy "public read" on item_types for select using (true);
 - Optional "Save my progress" button → links an email (magic link) so data moves with them to another phone.
 
 ### 5.4 Photos
-Do **not** store photos by default (privacy + storage limits). Only the AI result and weight are saved. If you later want photos for improving the label list, add an explicit opt-in and a Supabase Storage bucket.
+Photos never leave the phone: the AI runs on-device, and only the AI result and weight are saved. If you later want photos for improving the label list, add an explicit opt-in and a Supabase Storage bucket.
 
 ---
 
@@ -247,7 +228,7 @@ Do **not** store photos by default (privacy + storage limits). Only the AI resul
 [Camera]  <input type="file" accept="image/*" capture="environment">
    │      (opens the rear camera on phones; gallery also allowed)
    ▼
-[Analysing…]  spinner, "waking up AI" message if > 5 s (Space cold start)
+[Analysing…]  first scan only: "Getting the AI ready" with a download % bar
    │
    ▼
 [Result]  Detected: Aluminium Can
@@ -275,11 +256,10 @@ Non-recyclable result shows a red ❌ card with the reason and the right disposa
 
 ```
 scan2recycle/
-├── hf-space/
-│   ├── app.py
-│   └── requirements.txt
 ├── supabase/
+│   ├── setup_all.sql                -- one-file setup for the SQL Editor (re-runnable)
 │   ├── migrations/001_init.sql      -- tables, view, RLS (§5)
+│   ├── migrations/002_grants.sql    -- Data API grants
 │   └── seed.sql                     -- materials + item_types rows
 ├── web/
 │   ├── index.html
@@ -289,24 +269,25 @@ scan2recycle/
 │   │   ├── App.tsx                  -- routes + bottom nav
 │   │   ├── lib/
 │   │   │   ├── supabase.ts          -- client init
-│   │   │   ├── classify.ts          -- calls HF Space (§4.5)
+│   │   │   ├── classifier/          -- CLIP worker, client, similarity, decide (§4.4)
+│   │   │   ├── catalog.ts           -- loads materials + item_types
+│   │   │   ├── disposal.ts          -- which bin an item goes in
 │   │   │   ├── image.ts             -- resize/validate photo
-│   │   │   ├── decide.ts            -- score → result/confidence rules (§4.3)
-│   │   │   └── totals.ts            -- grams → kg, impact text
+│   │   │   └── totals.ts            -- grams → kg, impact text (Phase 2)
 │   │   ├── features/
-│   │   │   ├── scan/                -- ScanPage, ResultCard, CorrectionPicker
+│   │   │   ├── scan/                -- ScanPage, ResultCard, ChoicePicker, MaterialPicker
 │   │   │   ├── log/                 -- WeightForm
 │   │   │   ├── stats/               -- MyRecyclingPage, MaterialChart, ImpactBanner
 │   │   │   └── history/             -- HistoryPage
 │   │   └── types.ts
 │   ├── tests/                       -- Vitest unit tests
 │   ├── e2e/                         -- Playwright tests
-│   ├── .env.example                 -- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_HF_SPACE_ID
+│   ├── .env.example                 -- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 │   └── vite.config.ts               -- vite-plugin-pwa
 └── README.md
 ```
 
-Secrets: only the Supabase **anon** key and the public Space ID go in `.env`. Never put the Supabase `service_role` key or a Hugging Face token in the frontend. Add `.env` to `.gitignore`.
+Secrets: only the Supabase **publishable** key goes in `.env`. Never put a Supabase secret / `service_role` key in the frontend. Add `.env` to `.gitignore`.
 
 ---
 
@@ -326,19 +307,19 @@ Only count items where `recyclable = true` and a weight was entered. Show "+ N i
 Assumes a team of ~3–4. Adjust dates to your deadline.
 
 ### Phase 0 — Setup (½ week)
-- [ ] Create GitHub repo, add everyone
-- [ ] Create Supabase project, run `001_init.sql`
-- [ ] Create Hugging Face account + Space (Gradio SDK, CPU basic)
-- [ ] Scaffold `web/` with Vite React TS, Tailwind, vite-plugin-pwa
-- [ ] Deploy empty app to Vercel → confirm the link opens on a phone
-- [ ] **Decide local bin rules** (§13) and write `seed.sql`
+- [x] Create GitHub repo, add everyone
+- [x] Create Supabase project, run `setup_all.sql`
+- [x] Scaffold `web/` with Vite React TS, Tailwind, vite-plugin-pwa
+- [ ] Deploy to Vercel → confirm the link opens on a phone
+- [ ] **Decide local bin rules** (§13) and update `seed.sql`
 
 ### Phase 1 — AI working end to end (1 week)
-- [ ] Deploy `app.py` to the Space; test in the Space's web UI with real photos
-- [ ] `image.ts` resize/validate, `classify.ts`, `decide.ts`
-- [ ] Scan page → Result card with hard-coded labels
-- [ ] Load labels from `item_types` instead
-- [ ] Collect 50+ test photos of real items (team's own photos) and record accuracy
+- [x] On-device CLIP in a Web Worker (Transformers.js), labels from `item_types`
+- [x] `image.ts` resize/validate, `decide.ts`, `disposal.ts`
+- [x] Scan page → Result / "Is it one of these?" / material picker
+- [x] Baseline accuracy on 145 TrashNet photos (§4.3)
+- [ ] Collect 50+ photos of real items with the team's phones and re-measure accuracy
+- [ ] Test the first-scan download and scan speed on a real iPhone and Android
 
 ### Phase 2 — Database & tracking (1 week)
 - [ ] Anonymous auth on app start
@@ -359,7 +340,7 @@ Assumes a team of ~3–4. Adjust dates to your deadline.
 ### Suggested roles
 | Person | Owns |
 |--------|------|
-| A | HF Space, label list, accuracy testing |
+| A | AI label list, accuracy testing |
 | B | Supabase schema, auth, totals |
 | C | Scan + Result + Weight screens |
 | D | My Recycling, History, PWA/phone testing, presentation |
@@ -384,7 +365,7 @@ Assumes a team of ~3–4. Adjust dates to your deadline.
 |------|------|------|
 | Unit | `decide.ts` thresholds, `totals.ts` (g→kg, rounding, excludes non-recyclables), `image.ts` validation | Vitest |
 | Integration | Insert/read logs against a Supabase test project; RLS: user A cannot read user B's rows | Vitest + supabase-js |
-| End-to-end | Upload a fixture photo → see result → enter weight → totals update (mock the Space for speed) | Playwright |
+| End-to-end | Upload a fixture photo → see result → enter weight → totals update (mock the classifier worker for speed) | Playwright |
 | AI accuracy | Spreadsheet of 50+ real photos: expected vs predicted, % correct per material. Re-run after changing labels/thresholds | Manual + small script |
 | Device | Real iPhone + Android, poor lighting, cluttered background | Manual |
 
@@ -397,8 +378,8 @@ Target: ≥ 80% unit-test coverage on `src/lib/`; ≥ 80% top-1 accuracy on the 
 | Risk | Mitigation |
 |------|-----------|
 | AI misidentifies items | Curated label list, confidence thresholds, top-3 picker, manual correction always available |
-| Space asleep during demo | Open it 5 min early; show "waking up AI…" message; option C (on-device) as backup |
-| Space down / no internet | Fall back to manual material picker so logging still works |
+| 150 MB model download on mobile data | Warn before the first scan; downloaded once, then cached. Open the app on Wi-Fi before a demo |
+| Old / low-memory phones are slow or crash loading the model | Quantised model; material picker works without AI; consider a smaller model if needed |
 | Users don't own a scale | Weight is optional; stretch: typical-weight defaults |
 | Bin rules differ by location | Bin names/colours stored in the `materials` table, not hard-coded |
 | Wrong recycling advice (e.g. greasy boxes, bags) | Include common "looks recyclable but isn't" items in the label list with tips |

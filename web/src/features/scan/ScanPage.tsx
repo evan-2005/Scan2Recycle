@@ -1,41 +1,66 @@
 import { PageHeader } from '../../components/PageHeader'
 import { SetupStatus } from '../setup/SetupStatus'
+import { ChoicePicker } from './ChoicePicker'
+import { MaterialPicker } from './MaterialPicker'
+import { ResultCard } from './ResultCard'
+import { ScanStart } from './ScanStart'
+import { ScanWorking } from './ScanWorking'
+import { useCatalog } from './useCatalog'
+import { useScanFlow } from './useScanFlow'
 
 export function ScanPage() {
-  return (
-    <>
-      <PageHeader
-        eyebrow="Scan2Recycle"
-        title={
-          <>
-            What's in
-            <br />
-            your hand?
-          </>
-        }
-      />
+  const catalog = useCatalog()
+  const ready = catalog.status === 'ready' ? catalog.catalog : null
+  const flow = useScanFlow(ready)
+  const { state } = flow
 
-      <div className="relative">
-        <div aria-hidden="true" className="absolute inset-0 translate-x-2 translate-y-2 rounded-3xl bg-signal" />
-        <button
-          type="button"
-          disabled
-          className="relative flex w-full flex-col items-start gap-6 rounded-3xl bg-forest p-6 text-left text-paper shadow-lg disabled:cursor-not-allowed"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-12" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-          <span>
-            <span className="block font-display text-2xl font-extrabold">Scan an item</span>
-            <span className="mt-1 block text-sm text-paper/75">Camera and AI arrive in Phase 1.</span>
-          </span>
-        </button>
-      </div>
-
-      <div className="mt-10">
-        <SetupStatus />
-      </div>
-    </>
-  )
+  switch (state.step) {
+    case 'loading-model':
+      return <ScanWorking photoUrl={state.photoUrl} percent={state.percent} />
+    case 'analysing':
+      return <ScanWorking photoUrl={state.photoUrl} percent={null} />
+    case 'answer':
+      return (
+        <ResultCard
+          photoUrl={state.photoUrl}
+          answer={state.answer}
+          materials={ready?.materials ?? []}
+          onChange={flow.change}
+          onDone={flow.reset}
+        />
+      )
+    case 'choose':
+      return <ChoicePicker photoUrl={state.photoUrl} options={state.options} onPick={flow.pickItem} onNone={flow.noneOfThese} />
+    case 'pick-material':
+      return <MaterialPicker photoUrl={state.photoUrl} materials={ready?.materials ?? []} onPick={flow.pickMaterial} />
+    case 'error':
+      return (
+        <div className="pt-10" role="alert">
+          <PageHeader eyebrow="Scan2Recycle" title="That didn't work" />
+          <p className="text-ink-soft">{state.message}</p>
+          <button type="button" onClick={flow.reset} className="mt-8 min-h-12 w-full rounded-full bg-forest px-6 font-semibold text-paper">
+            Try again
+          </button>
+        </div>
+      )
+    case 'idle':
+      return (
+        <>
+          <PageHeader
+            eyebrow="Scan2Recycle"
+            title={
+              <>
+                What's in
+                <br />
+                your hand?
+              </>
+            }
+          />
+          <ScanStart catalog={catalog} onPhoto={flow.start} />
+          <div className="mt-10">
+            <SetupStatus />
+          </div>
+        </>
+      )
+  }
 }

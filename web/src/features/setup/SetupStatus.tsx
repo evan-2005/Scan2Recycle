@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { config, isSupabaseConfigured } from '../../lib/env'
-import { fetchMaterials } from '../../lib/materials'
+import { fetchMaterials } from '../../lib/catalog'
 
 type DbState =
   | { status: 'idle' }
@@ -35,7 +35,8 @@ function CheckRow({ label, ok, detail }: CheckRowProps) {
   )
 }
 
-/** Phase 0 checklist: shows whether env vars are set and the database seed is reachable. */
+/** Setup checklist: shows whether env vars are set and the database seed is reachable.
+ *  The AI model needs no setup; it downloads from the Hugging Face Hub on the first scan. */
 export function SetupStatus() {
   const supabaseReady = isSupabaseConfigured(config)
   const [db, setDb] = useState<DbState>({ status: supabaseReady ? 'checking' : 'idle' })
@@ -73,11 +74,6 @@ export function SetupStatus() {
           detail={supabaseReady ? 'URL and anon key found.' : 'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to web/.env.local.'}
         />
         <CheckRow label="Database seeded" ok={db.status === 'ok'} detail={dbDetail} />
-        <CheckRow
-          label="Hugging Face Space"
-          ok={config.hfSpaceId !== null}
-          detail={config.hfSpaceId ? `Using ${config.hfSpaceId}.` : 'Add VITE_HF_SPACE_ID (owner/space-name) to web/.env.local.'}
-        />
       </ul>
     </section>
   )
