@@ -23,10 +23,40 @@ export const en = {
 
   // Navigation
   'nav.label': 'Main navigation',
+  'nav.home': 'Home',
   'nav.scan': 'Scan',
   'nav.dropoff': 'Drop-off',
   'nav.groups': 'Groups',
   'nav.stats': 'My Recycling',
+
+  // Home
+  'home.eyebrow': 'Scan2Recycle',
+  'home.titleLine1': 'Ready to',
+  'home.titleLine2': 'recycle?',
+  'home.scanHint': 'Snap a photo to find the right bin.',
+  'home.dropoff': 'Drop-off points',
+  'home.dropoffHint': 'Nearest places to recycle',
+  'home.groups': 'Groups',
+  'home.groupsHint': 'Recycle with friends',
+  'home.statsLabel': 'Your recycling so far',
+  'home.week': 'this week',
+  'home.total': 'in total',
+  'home.guest': 'You’re a guest, so your scans are only saved on this device.',
+  'home.guestLink': 'Save my progress →',
+
+  // Welcome (sign up / log in / guest)
+  'welcome.titleLine1': 'Snap it.',
+  'welcome.titleLine2': 'Sort it.',
+  'welcome.tabsLabel': 'Sign up or log in',
+  'welcome.signUp': 'Sign up',
+  'welcome.logIn': 'Log in',
+  'welcome.signUpIntro': 'Create an account to keep your totals safe and see them on any phone.',
+  'welcome.logInIntro': 'Welcome back! Log in to see your totals.',
+  'welcome.createButton': 'Create account',
+  'welcome.or': 'or',
+  'welcome.guest': 'Continue as guest',
+  'welcome.guestNote': 'Guest scans stay on this device. You can save them to an account later in My Recycling.',
+  'welcome.checkInbox': 'We sent a confirmation link to {email}. Open it (check your spam folder too) to finish signing up.',
 
   // Scan start
   'scan.eyebrow': 'Scan2Recycle',
@@ -132,6 +162,7 @@ export const en = {
   'streak.goal': 'Goal',
   'streak.perWeek': '{weight} a week',
   'streak.start': 'Save an item today to start a streak.',
+  'streak.keepGoing': 'Save an item today to keep your streak going.',
 
   // Account
   'account.heading': 'Your account',
@@ -157,6 +188,7 @@ export const en = {
   'account.resent': '✓ Sent again. Check your inbox and spam folder.',
   'account.refresh': 'I’ve confirmed it',
   'account.stillPending': 'Not confirmed yet. Open the link in the email first.',
+  'account.confirmedReady': '✓ Email confirmed! You’re signed in.',
   'account.confirmedNotice': '✓ Email confirmed! Now set a password so you can sign in on other phones.',
   'account.setPasswordTitle': 'Set a password',
   'account.setPasswordIntro': 'Use it with {email} to sign in on any phone.',
@@ -318,6 +350,8 @@ export const en = {
   'error.email': 'Enter a valid email address.',
   'error.password': 'Use at least {n} characters.',
   'error.weakPassword': 'That password is too weak. Try a longer one.',
+  'error.signUpExists': 'That email already has an account. Log in instead.',
+  'error.signedOut': 'You’re signed out. Reload the page to sign in again.',
   'error.emailExists': 'That email already has an account. Use “Sign in” instead (scans saved on this device won’t move over).',
   'error.emailNotAuthorized':
     'Supabase can’t send email to that address. Ask the team to turn off “Confirm email” or set up an email service (README).',

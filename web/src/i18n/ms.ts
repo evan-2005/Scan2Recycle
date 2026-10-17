@@ -25,12 +25,40 @@ export const ms: Record<MessageKey, string> = {
 
   // Navigation
   'nav.label': 'Navigasi utama',
+  'nav.home': 'Utama',
   'nav.scan': 'Imbas',
   'nav.dropoff': 'Hantar',
   'nav.groups': 'Kumpulan',
   'nav.stats': 'Kitar Saya',
 
   // Scan start
+  'home.eyebrow': 'Scan2Recycle',
+  'home.titleLine1': 'Sedia untuk',
+  'home.titleLine2': 'kitar semula?',
+  'home.scanHint': 'Ambil gambar untuk mencari tong yang betul.',
+  'home.dropoff': 'Tempat hantar',
+  'home.dropoffHint': 'Tempat kitar semula terdekat',
+  'home.groups': 'Kumpulan',
+  'home.groupsHint': 'Kitar semula bersama rakan',
+  'home.statsLabel': 'Kitar semula anda setakat ini',
+  'home.week': 'minggu ini',
+  'home.total': 'keseluruhan',
+  'home.guest': 'Anda tetamu, jadi imbasan anda hanya disimpan dalam peranti ini.',
+  'home.guestLink': 'Simpan kemajuan saya →',
+
+  'welcome.titleLine1': 'Ambil gambar.',
+  'welcome.titleLine2': 'Asingkan.',
+  'welcome.tabsLabel': 'Daftar atau log masuk',
+  'welcome.signUp': 'Daftar',
+  'welcome.logIn': 'Log masuk',
+  'welcome.signUpIntro': 'Cipta akaun supaya jumlah anda selamat dan boleh dilihat di mana-mana telefon.',
+  'welcome.logInIntro': 'Selamat kembali! Log masuk untuk melihat jumlah anda.',
+  'welcome.createButton': 'Cipta akaun',
+  'welcome.or': 'atau',
+  'welcome.guest': 'Teruskan sebagai tetamu',
+  'welcome.guestNote': 'Imbasan tetamu kekal dalam peranti ini. Anda boleh menyimpannya ke akaun kemudian di Kitar Saya.',
+  'welcome.checkInbox': 'Kami telah menghantar pautan pengesahan ke {email}. Bukanya (semak folder spam juga) untuk melengkapkan pendaftaran.',
+
   'scan.eyebrow': 'Scan2Recycle',
   'scan.titleLine1': 'Apa yang ada',
   'scan.titleLine2': 'di tangan anda?',
@@ -134,6 +162,7 @@ export const ms: Record<MessageKey, string> = {
   'streak.goal': 'Sasaran',
   'streak.perWeek': '{weight} seminggu',
   'streak.start': 'Simpan satu barang hari ini untuk memulakan rentetan.',
+  'streak.keepGoing': 'Simpan satu barang hari ini untuk meneruskan rentetan anda.',
 
   // Account
   'account.heading': 'Akaun anda',
@@ -159,6 +188,7 @@ export const ms: Record<MessageKey, string> = {
   'account.resent': '✓ Dihantar semula. Semak peti masuk dan folder spam anda.',
   'account.refresh': 'Saya sudah mengesahkannya',
   'account.stillPending': 'Belum disahkan. Buka pautan dalam e-mel itu dahulu.',
+  'account.confirmedReady': '✓ E-mel disahkan! Anda telah log masuk.',
   'account.confirmedNotice': '✓ E-mel disahkan! Sekarang tetapkan kata laluan supaya anda boleh log masuk di telefon lain.',
   'account.setPasswordTitle': 'Tetapkan kata laluan',
   'account.setPasswordIntro': 'Gunakannya bersama {email} untuk log masuk di mana-mana telefon.',
@@ -320,6 +350,8 @@ export const ms: Record<MessageKey, string> = {
   'error.email': 'Masukkan alamat e-mel yang sah.',
   'error.password': 'Gunakan sekurang-kurangnya {n} aksara.',
   'error.weakPassword': 'Kata laluan itu terlalu lemah. Cuba yang lebih panjang.',
+  'error.signUpExists': 'E-mel itu sudah mempunyai akaun. Sila log masuk.',
+  'error.signedOut': 'Anda telah log keluar. Muat semula halaman untuk log masuk semula.',
   'error.emailExists': 'E-mel itu sudah mempunyai akaun. Gunakan “Log masuk” (imbasan dalam peranti ini tidak akan dipindahkan).',
   'error.emailNotAuthorized':
     'Supabase tidak dapat menghantar e-mel ke alamat itu. Minta pasukan mematikan “Confirm email” atau sediakan perkhidmatan e-mel (README).',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currentStreak, dayKey, DEFAULT_GOAL_KG, parseGoal, startOfWeek, weekProgress } from './streaks'
+import { currentStreak, dayKey, DEFAULT_GOAL_KG, hasSavedToday, parseGoal, startOfWeek, weekProgress } from './streaks'
 
 /** Local time, so tests behave the same in any timezone. */
 const at = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h)
@@ -35,6 +35,14 @@ describe('currentStreak', () => {
   it('crosses month boundaries', () => {
     const now = at(2026, 11, 1)
     expect(currentStreak([log(at(2026, 11, 1)), log(at(2026, 10, 31)), log(at(2026, 10, 30))], now)).toBe(3)
+  })
+})
+
+describe('hasSavedToday', () => {
+  it("is true only when something was saved on today’s date", () => {
+    expect(hasSavedToday([log(at(2026, 10, 15, 0))], NOW)).toBe(true)
+    expect(hasSavedToday([log(at(2026, 10, 14, 23))], NOW)).toBe(false)
+    expect(hasSavedToday([], NOW)).toBe(false)
   })
 })
 

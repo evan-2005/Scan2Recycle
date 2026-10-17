@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useI18n } from '../../i18n/context'
-import { currentStreak, GOAL_OPTIONS_KG, parseGoal, weekProgress, type DatedLog } from '../../lib/streaks'
+import { currentStreak, GOAL_OPTIONS_KG, hasSavedToday, parseGoal, weekProgress, type DatedLog } from '../../lib/streaks'
 import { formatWeight } from '../../lib/totals'
 
 const GOAL_KEY = 'weekly-goal-kg'
@@ -89,6 +89,7 @@ export function StreakCard({ logs }: StreakCardProps) {
         </label>
       </div>
       {streak === 0 && <p className="col-span-2 text-xs text-ink-soft">{t('streak.start')}</p>}
+      {streak > 0 && !hasSavedToday(logs, now) && <p className="col-span-2 text-xs font-semibold text-ink">{t('streak.keepGoing')}</p>}
     </section>
   )
 }

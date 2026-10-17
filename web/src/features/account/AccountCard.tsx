@@ -36,12 +36,16 @@ export function AccountCard({ onAccountChange }: AccountCardProps) {
 
   if (!account) return null
 
+  // Accounts made on the welcome screen already have a password, so "now set a password" doesn't apply.
+  const isReady = account.kind === 'email' && account.hasPassword
+  const shownNotice = notice?.key === 'account.confirmedNotice' && isReady ? msg('account.confirmedReady') : notice
+
   const wrap = (body: ReactNode) => (
     <section className="mt-10 rounded-3xl border border-ink/10 bg-white/60 p-5" aria-label={t('account.heading')}>
       <h2 className="font-display text-xl font-extrabold">{t('account.heading')}</h2>
-      {notice && (
+      {shownNotice && (
         <p role="status" className="mt-2 rounded-xl bg-forest/10 px-3 py-2 text-sm text-forest">
-          {m(notice)}
+          {m(shownNotice)}
         </p>
       )}
       {body}
@@ -81,9 +85,9 @@ export function AccountCard({ onAccountChange }: AccountCardProps) {
 
   async function handleSignOut() {
     if (!window.confirm(t('account.signOutConfirm'))) return
+    // No reload here: once signed out, App swaps every page for the welcome screen.
     await signOut()
     setNotice(null)
-    onAccountChange?.()
   }
 
   if (account.kind === 'pending') {

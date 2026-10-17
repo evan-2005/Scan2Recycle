@@ -1,7 +1,7 @@
-export const ROUTES = ['scan', 'dropoff', 'groups', 'stats', 'history'] as const
+export const ROUTES = ['home', 'scan', 'dropoff', 'groups', 'stats', 'history'] as const
 export type Route = (typeof ROUTES)[number]
 
-export const DEFAULT_ROUTE: Route = 'scan'
+export const DEFAULT_ROUTE: Route = 'home'
 
 /** Maps a location hash like "#/stats" to a known route, falling back to the default. */
 export function parseRoute(hash: string): Route {

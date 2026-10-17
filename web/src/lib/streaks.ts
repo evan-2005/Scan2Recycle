@@ -34,6 +34,12 @@ export function currentStreak(logs: readonly DatedLog[], now: Date): number {
   return streak
 }
 
+/** Whether anything was saved on today's local date (if not, a running streak ends at midnight). */
+export function hasSavedToday(logs: readonly DatedLog[], now: Date): boolean {
+  const today = dayKey(now)
+  return logs.some((log) => dayKey(new Date(log.created_at)) === today)
+}
+
 /** Monday 00:00 local time of the week containing `now` (weeks start on Monday in Malaysia). */
 export function startOfWeek(now: Date): Date {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())

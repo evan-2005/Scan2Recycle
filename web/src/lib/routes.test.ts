@@ -3,6 +3,7 @@ import { DEFAULT_ROUTE, parseRoute, routeHref, routeParams } from './routes'
 
 describe('parseRoute', () => {
   it.each([
+    ['#/home', 'home'],
     ['#/scan', 'scan'],
     ['#/dropoff', 'dropoff'],
     ['#/groups', 'groups'],
@@ -17,6 +18,10 @@ describe('parseRoute', () => {
 
   it.each(['', '#', '#/', '#/unknown', '#/SCAN'])('falls back to the default for %j', (hash) => {
     expect(parseRoute(hash)).toBe(DEFAULT_ROUTE)
+  })
+
+  it('opens on the home page', () => {
+    expect(DEFAULT_ROUTE).toBe('home')
   })
 })
 

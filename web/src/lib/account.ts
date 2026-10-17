@@ -102,6 +102,48 @@ export async function requestPasswordReset(email: string): Promise<Result<null>>
   return error ? { ok: false, error: friendlyAuthError(error.message) } : { ok: true, value: null }
 }
 
+export type SignUpOutcome = 'signed-in' | 'confirm' | 'exists'
+
+interface SignUpData {
+  session: object | null
+  user: { identities?: readonly object[] } | null
+}
+
+/**
+ * What happened after supabase.auth.signUp. With "Confirm email" on there is no session until the link is
+ * clicked, and an already-registered email comes back as a user with no identities instead of an error.
+ */
+export function signUpOutcome(data: SignUpData): SignUpOutcome {
+  if (data.session) return 'signed-in'
+  return data.user?.identities?.length === 0 ? 'exists' : 'confirm'
+}
+
+/** Creates a new email account (used on the welcome screen, before there is any anonymous user to upgrade). */
+export async function signUpWithEmail(email: string, password: string): Promise<Result<SignUpOutcome>> {
+  if (!supabase) return { ok: false, error: msg('error.notConfigured') }
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim(),
+    password,
+    options: { data: { has_password: true }, emailRedirectTo: redirectFor('confirmed') },
+  })
+  if (error) return { ok: false, error: friendlyAuthError(error.message) }
+  const outcome = signUpOutcome(data)
+  return outcome === 'exists' ? { ok: false, error: msg('error.signUpExists') } : { ok: true, value: outcome }
+}
+
+/** Starts as a guest: an anonymous account that keeps scans on this device until the user saves their progress. */
+export async function continueAsGuest(): Promise<Result<null>> {
+  const session = await ensureSession({ allowGuest: true })
+  return session.ok ? { ok: true, value: null } : session
+}
+
+/** Sends the sign-up confirmation email again. */
+export async function resendSignUp(email: string): Promise<Result<null>> {
+  if (!supabase) return { ok: false, error: msg('error.notConfigured') }
+  const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectFor('confirmed') } })
+  return error ? { ok: false, error: friendlyAuthError(error.message) } : { ok: true, value: null }
+}
+
 /** Signs in to an existing account on this device. Anonymous scans already on this device stay with that anonymous user. */
 export async function signInWithEmail(email: string, password: string): Promise<Result<Account>> {
   if (!supabase) return { ok: false, error: msg('error.notConfigured') }

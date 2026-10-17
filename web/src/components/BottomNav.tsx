@@ -11,6 +11,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
+  { route: 'home', label: 'nav.home', icon: 'M3 10.5 12 3l9 7.5M5 9v11h5v-6h4v6h5V9' },
   { route: 'scan', label: 'nav.scan', icon: 'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0' },
   { route: 'dropoff', label: 'nav.dropoff', icon: 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6' },
   { route: 'groups', label: 'nav.groups', icon: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8' },
@@ -36,7 +37,7 @@ export function BottomNav({ current }: BottomNavProps) {
               <a
                 href={routeHref(item.route)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                className={`flex min-h-16 flex-col items-center justify-start gap-1 px-0.5 pt-2.5 text-center text-xs leading-tight font-medium transition-colors ${
                   isActive ? 'text-forest' : 'text-ink-soft hover:text-ink'
                 }`}
               >

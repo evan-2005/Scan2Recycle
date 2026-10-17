@@ -1,20 +1,12 @@
 import { PageHeader } from '../../components/PageHeader'
 import { useI18n } from '../../i18n/context'
 import { useLoad } from '../../hooks/useLoad'
-import { fetchMaterials } from '../../lib/catalog'
-import { fetchHistory } from '../../lib/logs'
 import { routeHref } from '../../lib/routes'
-import { formatWeight, summarize, type Totals } from '../../lib/totals'
+import { formatWeight, type Totals } from '../../lib/totals'
 import { AccountCard } from '../account/AccountCard'
+import { loadTotals } from './loadTotals'
 import { MaterialBars } from './MaterialBars'
 import { StreakCard } from './StreakCard'
-
-async function loadTotals() {
-  const [materials, history] = await Promise.all([fetchMaterials(), fetchHistory()])
-  if (!materials.ok) return materials
-  if (!history.ok) return history
-  return { ok: true as const, value: { totals: summarize(history.value, materials.materials), history: history.value } }
-}
 
 function ImpactBanner({ totals }: { totals: Totals }) {
   const { t, n } = useI18n()

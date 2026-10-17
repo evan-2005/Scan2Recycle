@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accountFromUser, friendlyAuthError, MIN_PASSWORD_LENGTH, validateCredentials } from './account'
+import { accountFromUser, friendlyAuthError, MIN_PASSWORD_LENGTH, signUpOutcome, validateCredentials } from './account'
 
 describe('accountFromUser', () => {
   it('describes each kind of user', () => {
@@ -39,5 +39,21 @@ describe('friendlyAuthError', () => {
 
   it('keeps unknown errors as detail', () => {
     expect(friendlyAuthError('weird failure')).toEqual({ key: 'error.generic', vars: { detail: 'weird failure' } })
+  })
+})
+
+describe('signUpOutcome', () => {
+  const user = { identities: [{ id: '1' }] }
+
+  it('signs straight in when Supabase returns a session (email confirmation off)', () => {
+    expect(signUpOutcome({ session: { access_token: 't' }, user })).toBe('signed-in')
+  })
+
+  it('waits for the confirmation email when there is no session yet', () => {
+    expect(signUpOutcome({ session: null, user })).toBe('confirm')
+  })
+
+  it('spots an email that is already registered (Supabase hides it as a user with no identities)', () => {
+    expect(signUpOutcome({ session: null, user: { identities: [] } })).toBe('exists')
   })
 })
