@@ -17,6 +17,17 @@ export function msg(key: MessageKey, vars?: Vars): Message {
   return vars ? { key, vars } : { key }
 }
 
+/** An Error that carries a translatable Message, so catch blocks can show it in the user's language. */
+export class MessageError extends Error {
+  readonly userMessage: Message
+
+  constructor(userMessage: Message) {
+    super(userMessage.key)
+    this.name = 'MessageError'
+    this.userMessage = userMessage
+  }
+}
+
 const DICTIONARIES: Readonly<Record<Lang, Readonly<Record<MessageKey, string>>>> = { en, ms }
 
 /** Fills {placeholders}; unknown placeholders are left visible so mistakes are easy to spot. */

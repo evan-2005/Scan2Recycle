@@ -115,7 +115,7 @@ on conflict (id) do update set
   is_recyclable = excluded.is_recyclable,
   sort_order    = excluded.sort_order;
 
--- Labels are what CLIP compares the photo against ("a photo of <label>").
+-- Labels are what the image model compares the photo against ("a photo of <label>").
 -- typical_weight_g is left null on purpose: weigh real samples before filling it in.
 -- `recyclable` is per item, so e.g. a greasy pizza box is paper but not recyclable.
 insert into public.item_types (label, display_name, material_id, recyclable, tip) values

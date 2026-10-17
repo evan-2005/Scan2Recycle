@@ -16,7 +16,7 @@ async function signIn(): Promise<SessionResult> {
     const disabled = /anonymous/i.test(error?.message ?? '')
     return {
       ok: false,
-      error: disabled ? msg('error.anonDisabled') : msg('error.signInFailed', { detail: error?.message ?? 'unknown error' }),
+      error: disabled ? msg('error.anonDisabled') : msg('error.signInFailed', { detail: error?.message ?? '?' }),
     }
   }
   return { ok: true, userId: data.user.id }

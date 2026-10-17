@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createI18n, I18nContext } from './context'
-import { DEFAULT_LANG, isLang, type Lang } from './translate'
+import { DEFAULT_LANG, isLang, translate, type Lang } from './translate'
 
 const STORAGE_KEY = 'lang'
 
@@ -13,12 +13,13 @@ function readLang(): Lang {
   }
 }
 
-/** Holds the chosen language (English by default), remembers it on this device, and sets <html lang>. */
+/** Holds the chosen language (English by default), remembers it on this device, and sets <html lang> and the page description. */
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(readLang)
 
   useEffect(() => {
     document.documentElement.lang = lang
+    document.querySelector('meta[name="description"]')?.setAttribute('content', translate(lang, 'app.description'))
   }, [lang])
 
   const value = useMemo(

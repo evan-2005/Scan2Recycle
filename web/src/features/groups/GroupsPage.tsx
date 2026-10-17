@@ -16,7 +16,7 @@ export function GroupsPage() {
   const selectedId = useHashParam('id')
   const { state, reload } = useLoad(fetchMyGroups)
   const memberships = state.status === 'ready' ? state.value : []
-  const selected = memberships.find((m) => m.group.id === selectedId)
+  const selected = memberships.find((membership) => membership.group.id === selectedId)
 
   if (selectedId && selected) {
     return (

@@ -13,7 +13,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         // The ONNX runtime (~27 MB) is too big to precache on install. Cache it the first time a scan needs it.
-        // (The CLIP model files are cached separately by Transformers.js.)
+        // (The SigLIP model files are cached separately by Transformers.js.)
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'], // json = precomputed label embeddings
         globIgnores: ['**/*.wasm'],
         runtimeCaching: [
@@ -43,7 +43,7 @@ export default defineConfig({
     }),
   ],
   worker: {
-    // The CLIP worker imports Transformers.js, which needs ES-module workers.
+    // The classifier worker imports Transformers.js, which needs ES-module workers.
     format: 'es',
   },
   server: {

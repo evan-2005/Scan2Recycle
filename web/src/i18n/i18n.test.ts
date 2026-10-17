@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { en, type MessageKey } from './en'
 import { binName, itemName, itemTip, materialName } from './localize'
 import { ms } from './ms'
-import { format, isLang, msg, plural, translate } from './translate'
+import { format, isLang, msg, MessageError, plural, translate } from './translate'
 
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
 
@@ -18,6 +18,11 @@ describe('dictionaries', () => {
 
   it('has no empty texts', () => {
     expect(Object.entries(ms).filter(([, text]) => text.trim() === '')).toEqual([])
+  })
+
+  it('uses typographic apostrophes in English, like the rest of the text', () => {
+    const straight = (Object.keys(en) as MessageKey[]).filter((key) => /[A-Za-z]'[a-z]/.test(en[key]))
+    expect(straight).toEqual([])
   })
 })
 
@@ -41,6 +46,13 @@ describe('format / translate', () => {
   it('builds messages for library code', () => {
     expect(msg('error.password', { n: 8 })).toEqual({ key: 'error.password', vars: { n: 8 } })
     expect(msg('error.email')).toEqual({ key: 'error.email' })
+  })
+
+  it('carries a message inside an Error', () => {
+    const error = new MessageError(msg('error.imageRead'))
+    expect(error).toBeInstanceOf(Error)
+    expect(error.userMessage).toEqual({ key: 'error.imageRead' })
+    expect(translate('ms', error.userMessage.key)).not.toBe(translate('en', error.userMessage.key))
   })
 
   it('recognises languages', () => {

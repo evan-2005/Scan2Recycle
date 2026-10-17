@@ -6,6 +6,7 @@ import type { MessageKey } from './en'
  */
 export const ms: Record<MessageKey, string> = {
   // Common
+  'app.description': 'Ambil gambar, cari tong yang betul, jejaki kitar semula anda.',
   'common.tryAgain': 'Cuba lagi',
   'common.loading': 'Memuatkan…',
   'common.cancel': 'Batal',
@@ -116,7 +117,7 @@ export const ms: Record<MessageKey, string> = {
   'stats.seeAll': 'Lihat semua barang yang telah anda simpan →',
   'stats.emptyBefore': 'Belum ada yang disimpan.',
   'stats.emptyLink': 'Imbas barang pertama anda',
-  'stats.emptyAfter': 'dan tekan “Simpan ke Kitar Saya”.',
+  'stats.emptyAfter': 'dan ketik “Simpan ke Kitar Saya”.',
   'impact.heading': 'Jumlah dikitar semula',
   'impact.before': '🌱 Anda telah membantu mengalihkan',
   'impact.after': 'sisa boleh kitar semula daripada sisa am.',
@@ -124,7 +125,7 @@ export const ms: Record<MessageKey, string> = {
   'impact.withoutWeight_other': 'Serta {n} barang disimpan tanpa berat.',
 
   // Streak & goal
-  'streak.days': 'hari berturut',
+  'streak.days': 'hari berturut-turut',
   'streak.thisWeek': 'Minggu ini',
   'streak.ofGoal': 'daripada sasaran {goal}',
   'streak.goalLabel': 'Sasaran mingguan',
@@ -244,8 +245,8 @@ export const ms: Record<MessageKey, string> = {
   'hub.errorName': 'Berikan nama tempat itu (2–120 aksara).',
   'hub.errorLocation': 'Ketik peta untuk meletakkan pin, atau guna lokasi anda.',
   'hub.errorMaterials': 'Pilih sekurang-kurangnya satu benda yang diterima.',
-  'hub.errorHours': 'Waktu operasi mesti kurang daripada 120 aksara.',
-  'hub.errorNotes': 'Catatan mesti kurang daripada 300 aksara.',
+  'hub.errorHours': 'Waktu operasi boleh sehingga 120 aksara.',
+  'hub.errorNotes': 'Catatan boleh sehingga 300 aksara.',
   'hub.errorLimit': 'Anda boleh menambah sehingga 10 hab sehari.',
 
   // Groups
@@ -254,7 +255,7 @@ export const ms: Record<MessageKey, string> = {
   'groups.intro': 'Bergabung dengan kelas, kokurikulum atau jiran anda dan lihat berapa banyak yang anda kitar semula bersama.',
   'groups.loading': 'Memuatkan kumpulan anda…',
   'groups.listLabel': 'Kumpulan anda',
-  'groups.youAre': 'Anda “{name}” · kod',
+  'groups.youAre': 'Anda ialah “{name}” · kod',
   'groups.formLabel': 'Sertai atau cipta kumpulan',
   'groups.join': 'Sertai kumpulan',
   'groups.create': 'Cipta kumpulan',
@@ -307,10 +308,12 @@ export const ms: Record<MessageKey, string> = {
   'error.photo': 'Ada masalah semasa membaca gambar. ({detail})',
   'error.weightNumber': 'Masukkan berat sebagai nombor dalam gram, cth. 32.',
   'error.weightMin': 'Berat mestilah sekurang-kurangnya 0.1 g.',
-  'error.weightMax': 'Itu lebih daripada 50 kg. Semak nombor itu (sepatutnya dalam gram).',
+  'error.weightMax': 'Berat mestilah kurang daripada 50 kg. Semak nombor itu (sepatutnya dalam gram).',
   'error.imageType': 'Fail itu bukan gambar. Sila pilih gambar.',
   'error.imageEmpty': 'Gambar itu kosong. Sila cuba yang lain.',
   'error.imageSize': 'Gambar itu terlalu besar (maksimum 20 MB). Sila cuba yang lain.',
+  'error.imageRead': 'Tidak dapat membaca gambar itu. Sila cuba yang lain.',
+  'error.canvas': 'Pelayar ini tidak dapat memproses gambar. Cuba pelayar lain.',
   'error.geoBlocked': 'Lokasi disekat. Benarkan dalam tetapan pelayar anda, atau gerakkan peta sendiri.',
   'error.geoFailed': 'Tidak dapat mencari lokasi anda. Gerakkan peta ke kawasan anda.',
   'error.geoUnsupported': 'Pelayar ini tidak boleh berkongsi lokasi anda.',

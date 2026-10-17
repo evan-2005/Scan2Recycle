@@ -15,7 +15,7 @@ create table public.materials (
   sort_order    smallint not null default 0
 );
 
--- Items the AI can recognise. `label` is the text sent to CLIP ("a photo of <label>").
+-- Items the AI can recognise. `label` is the text the image model compares photos against ("a photo of <label>").
 create table public.item_types (
   id               serial primary key,
   label            text not null unique check (char_length(label) between 2 and 80),

@@ -1,7 +1,7 @@
-import { msg, type Message } from '../i18n/translate'
+import { msg, MessageError, type Message } from '../i18n/translate'
 
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024
-/** CLIP looks at 224 px, so anything much bigger only costs memory and time on the phone. */
+/** The model looks at 224 px, so anything much bigger only costs memory and time on the phone. */
 export const MAX_IMAGE_SIDE = 512
 const JPEG_QUALITY = 0.9
 
@@ -32,10 +32,10 @@ export async function prepareImage(file: Blob): Promise<Blob> {
     canvas.width = width
     canvas.height = height
     const context = canvas.getContext('2d')
-    if (!context) throw new Error('Canvas is not available in this browser.')
+    if (!context) throw new MessageError(msg('error.canvas'))
     context.drawImage(bitmap, 0, 0, width, height)
     return await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not read the photo.'))), 'image/jpeg', JPEG_QUALITY),
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new MessageError(msg('error.imageRead')))), 'image/jpeg', JPEG_QUALITY),
     )
   } finally {
     bitmap.close()

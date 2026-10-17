@@ -68,7 +68,7 @@ Phone browser (React PWA)
 ```
 supabase/
   setup_all.sql              everything below in one re-runnable file (the easy way)
-  seed.sql                   7 materials (Malaysian bins) + 34 original items
+  seed.sql                   7 materials (Malaysian bins) + the first 50 items
   migrations/001_init.sql    tables: materials, item_types, recycling_logs; view user_totals; RLS
   migrations/002_grants.sql  explicit Data API grants
   migrations/003_more_items.sql  16 items
@@ -120,7 +120,7 @@ cd web
 npm install
 cp .env.example .env.local   # then paste the Supabase URL + publishable key of bvqctjqhcsuevcgzhyou
 npm run dev                  # http://localhost:5173
-npm test                     # Vitest, 157 tests
+npm test                     # Vitest, 163 tests
 npm run lint
 npm run build
 npm run embed-labels         # after adding items
