@@ -5,6 +5,14 @@ Take a photo of an item → AI identifies it → the app tells you which bin it 
 **New here (person or AI)? Start with [HANDOFF.md](HANDOFF.md).** The full plan is in [PLAN.md](PLAN.md). Built so far: scan → AI → bin, "Can I recycle…?" search, saving with weight, totals, streaks and a weekly goal, history, a drop-off map where anyone can add recycling hubs, groups with a leaderboard, email sign-in to keep progress,
 and a full English / Bahasa Melayu switch. Live at <https://scan2-recycle.vercel.app>.
 
+## Screenshots
+
+Phone-sized views of the app (English, plus the Bahasa Melayu switch on the right).
+
+| Scan | Can I recycle…? | Drop-off map | Groups | Bahasa Melayu |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/scan.png" alt="Scan screen with the camera button and search box" width="160"> | <img src="docs/screenshots/search.png" alt="Searching for a battery shows it is not recyclable" width="160"> | <img src="docs/screenshots/dropoff.png" alt="Map of recycling points around Kuala Lumpur with material filters" width="160"> | <img src="docs/screenshots/groups.png" alt="Join or create a group with a join code" width="160"> | <img src="docs/screenshots/scan-bm.png" alt="The scan screen in Bahasa Melayu" width="160"> |
+
 ```
 supabase/   Database schema (migrations/) and starter data (seed.sql)
 web/        The app: React + Vite + TypeScript, installable PWA
