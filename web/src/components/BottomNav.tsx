@@ -37,7 +37,7 @@ export function BottomNav({ current }: BottomNavProps) {
               <a
                 href={routeHref(item.route)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex min-h-16 flex-col items-center justify-start gap-1 px-0.5 pt-2.5 text-center text-xs leading-tight font-medium transition-colors ${
+                className={`flex min-h-16 flex-col items-center justify-start gap-1 px-0.5 pt-2.5 text-center text-[0.6875rem] leading-tight font-medium transition-colors ${
                   isActive ? 'text-forest' : 'text-ink-soft hover:text-ink'
                 }`}
               >
